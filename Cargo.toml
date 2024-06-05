@@ -1,0 +1,16 @@
+[package]
+name = "yew-merging-board"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+yew = "0.21.0"
+
+[dev-dependencies]
+yew = { version = "0.21.0", features = ["csr"] }
+
+[workspace]
+members = [
+    ".",
+    "demo"
+]

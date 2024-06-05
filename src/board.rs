@@ -1,6 +1,7 @@
 use yew::prelude::*;
 use yew_hooks::use_size;
 
+use crate::board_bg::BoardBackground;
 use crate::square::{File, Rank, Square};
 
 #[derive(Properties, PartialEq, Default)]
@@ -38,13 +39,19 @@ pub fn Board(props: &BoardProps) -> Html {
         }
     }
 
+    let onclick_square = {
+        move |square: Square| {
+            log::info!("Clicked square: {square:?}");
+        }
+    };
+
     let style = format!("height: {}px !important; {style}", size.0);
     html! {
         <div class={classes!("cg-wrap", class.clone())} {style} ref={wrap_node}>
             <cg-container>
-                <cg-board>
+                <BoardBackground {onclick_square}>
                     {pieces}
-                </cg-board>
+                </BoardBackground>
             </cg-container>
         </div>
     }

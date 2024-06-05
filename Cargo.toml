@@ -4,7 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+log = "0.4.21"
+shadow-clone = "1.2.1"
 yew = "0.21.0"
+yew-autoprops = "0.4.1"
 yew-hooks = "0.3.2"
 
 [dev-dependencies]

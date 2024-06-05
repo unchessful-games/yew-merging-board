@@ -1,3 +1,6 @@
+pub mod board;
+pub mod square;
+
 use yew::prelude::*;
 
 #[function_component]

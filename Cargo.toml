@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 yew = "0.21.0"
+yew-hooks = "0.3.2"
 
 [dev-dependencies]
 yew = { version = "0.21.0", features = ["csr"] }

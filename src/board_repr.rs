@@ -194,6 +194,8 @@ impl BoardRepr {
                 };
 
                 let unitary_to_remain = src_combo_piece[which_half.opposite()];
+                let unitary_to_move = src_combo_piece[which_half];
+                let color_to_move = color_constructor(Piece::Unitary(unitary_to_move));
                 this[from] = Some(color_constructor(Piece::Unitary(
                     src_combo_piece[which_half],
                 )));
@@ -213,7 +215,7 @@ impl BoardRepr {
                     return Err(());
                 }
 
-                process_unitary_move(this, from, to, src_piece, dst_piece)?;
+                process_unitary_move(this, from, to, color_to_move, dst_piece)?;
 
                 // Finally, the temporary piece is stored back in the source square
                 this[from] = Some(color_constructor(Piece::Unitary(unitary_to_remain)));

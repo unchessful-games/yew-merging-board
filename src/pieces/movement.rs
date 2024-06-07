@@ -174,21 +174,25 @@ fn get_pawn_moves_from_square(
                 // If standing next to the en passant square,
                 // and the square up in the direction of the en passant square
                 // is empty
-                if let Some(ep_square) = board_repr.en_passant_square {
-                    if let Some(up) = from.up() {
-                        if Some(ep_square) == up.left() {
-                            if board_repr[up.left().unwrap()].is_none() {
+                if let Some(en_passant_square) = board_repr.en_passant_square {
+                    if let Some(upleft) = up.left() {
+                        if let Some(left) = from.left() {
+                            if left == en_passant_square && board_repr[upleft].is_none() {
                                 moves.push(Move {
                                     from,
-                                    to: up.left().unwrap(),
+                                    to: upleft,
                                     which_half,
                                 });
                             }
-                        } else if Some(ep_square) == up.right() {
-                            if board_repr[up.right().unwrap()].is_none() {
+                        }
+                    }
+
+                    if let Some(upright) = up.right() {
+                        if let Some(right) = from.right() {
+                            if right == en_passant_square && board_repr[upright].is_none() {
                                 moves.push(Move {
                                     from,
-                                    to: up.right().unwrap(),
+                                    to: upright,
                                     which_half,
                                 });
                             }
@@ -275,22 +279,28 @@ fn get_pawn_moves_from_square(
                 // If standing next to the en passant square,
                 // and the square down in the direction of the en passant square
                 // is empty
-                if let Some(down) = from.down() {
-                    if board_repr.en_passant_square == down.left() {
-                        if board_repr[down.left().unwrap()].is_none() {
-                            moves.push(Move {
-                                from,
-                                to: down.left().unwrap(),
-                                which_half,
-                            });
+                if let Some(en_passant_square) = board_repr.en_passant_square {
+                    if let Some(downleft) = down.left() {
+                        if let Some(left) = from.left() {
+                            if left == en_passant_square && board_repr[downleft].is_none() {
+                                moves.push(Move {
+                                    from,
+                                    to: downleft,
+                                    which_half,
+                                });
+                            }
                         }
-                    } else if board_repr.en_passant_square == down.right() {
-                        if board_repr[down.right().unwrap()].is_none() {
-                            moves.push(Move {
-                                from,
-                                to: down.right().unwrap(),
-                                which_half,
-                            });
+                    }
+
+                    if let Some(downright) = down.right() {
+                        if let Some(right) = from.right() {
+                            if right == en_passant_square && board_repr[downright].is_none() {
+                                moves.push(Move {
+                                    from,
+                                    to: downright,
+                                    which_half,
+                                });
+                            }
                         }
                     }
                 }

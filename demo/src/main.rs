@@ -18,7 +18,12 @@ fn App() -> Html {
     };
 
     html! {
-        <Board style="max-width: 50%;" class={"container"} {onmove} as_black={true} board={*board_state}/>
+        <>
+            <Board style="max-width: 50%;" class={"container"} {onmove} as_black={true} board={*board_state}/>
+            <code><pre>
+                {format!("{:#?}", *board_state)}
+            </pre></code>
+        </>
     }
 }
 

@@ -106,6 +106,21 @@ impl BoardRepr {
                 src_piece: ColorPiece,
                 dst_piece: Option<ColorPiece>,
             ) -> Result<(), ()> {
+                // If the destination square is empty,
+                // and this piece contains a pawn,
+                // and it is to the left or right of the en passant square
+                if let Some(ep_square) = this.en_passant_square {
+                    if from.file().distance(ep_square.file()) == 1
+                        && from.rank() == ep_square.rank()
+                    {
+                        this[from] = None;
+                        this[ep_square] = None;
+                        this[to] = Some(src_piece);
+                        this.en_passant_square = None;
+                        return Ok(());
+                    }
+                }
+
                 // If the destination square is empty
                 if dst_piece.is_none() {
                     this[to] = Some(src_piece);

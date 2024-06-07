@@ -5,7 +5,7 @@ use crate::{
     square::{Rank, Square},
 };
 
-use super::{Color, Piece, PieceHalf, UnitaryPiece};
+use super::{Color, ColorPiece, Piece, PieceHalf, UnitaryPiece};
 
 pub type MovesList = ArrayVec<Move, 1024>;
 
@@ -146,25 +146,52 @@ fn get_pawn_moves_from_square(
                     }
                 }
 
+                // If this piece is unitary, and the piece up right or up left is also unitary,
+                // then the move is valid (it will merge)
+                if let Some(piece) = board_repr[from] {
+                    if let Piece::Unitary(UnitaryPiece::Pawn) = piece.piece() {
+                        if let Some(right) = up.right() {
+                            if let Some(ColorPiece::White(Piece::Unitary(_))) = board_repr[right] {
+                                moves.push(Move {
+                                    from,
+                                    to: right,
+                                    which_half,
+                                });
+                            }
+                        }
+                        if let Some(left) = up.left() {
+                            if let Some(ColorPiece::White(Piece::Unitary(_))) = board_repr[left] {
+                                moves.push(Move {
+                                    from,
+                                    to: left,
+                                    which_half,
+                                });
+                            }
+                        }
+                    }
+                }
+
                 // If standing next to the en passant square,
                 // and the square up in the direction of the en passant square
                 // is empty
-                if let Some(up) = from.up() {
-                    if board_repr.en_passant_square == up.left() {
-                        if board_repr[up.left().unwrap()].is_none() {
-                            moves.push(Move {
-                                from,
-                                to: up.left().unwrap(),
-                                which_half,
-                            });
-                        }
-                    } else if board_repr.en_passant_square == up.right() {
-                        if board_repr[up.right().unwrap()].is_none() {
-                            moves.push(Move {
-                                from,
-                                to: up.right().unwrap(),
-                                which_half,
-                            });
+                if let Some(ep_square) = board_repr.en_passant_square {
+                    if let Some(up) = from.up() {
+                        if Some(ep_square) == up.left() {
+                            if board_repr[up.left().unwrap()].is_none() {
+                                moves.push(Move {
+                                    from,
+                                    to: up.left().unwrap(),
+                                    which_half,
+                                });
+                            }
+                        } else if Some(ep_square) == up.right() {
+                            if board_repr[up.right().unwrap()].is_none() {
+                                moves.push(Move {
+                                    from,
+                                    to: up.right().unwrap(),
+                                    which_half,
+                                });
+                            }
                         }
                     }
                 }
@@ -194,7 +221,7 @@ fn get_pawn_moves_from_square(
                     }
                 }
 
-                // If the square down left is occupied by an enemy piece
+                // If the square down left is occupied by a piece (friendly or enemy)
                 if let Some(left) = down.left() {
                     if let Some(piece) = board_repr[left] {
                         if piece.color() != board_repr.side_to_move {
@@ -216,6 +243,31 @@ fn get_pawn_moves_from_square(
                                 to: right,
                                 which_half,
                             });
+                        }
+                    }
+                }
+
+                // If this piece is unitary, and the piece down right or down left is also unitary,
+                // then the move is valid (it will merge)
+                if let Some(piece) = board_repr[from] {
+                    if let Piece::Unitary(UnitaryPiece::Pawn) = piece.piece() {
+                        if let Some(right) = down.right() {
+                            if let Some(ColorPiece::Black(Piece::Unitary(_))) = board_repr[right] {
+                                moves.push(Move {
+                                    from,
+                                    to: right,
+                                    which_half,
+                                });
+                            }
+                        }
+                        if let Some(left) = down.left() {
+                            if let Some(ColorPiece::Black(Piece::Unitary(_))) = board_repr[left] {
+                                moves.push(Move {
+                                    from,
+                                    to: left,
+                                    which_half,
+                                });
+                            }
                         }
                     }
                 }
@@ -265,8 +317,8 @@ fn try_add(
         true
     } else {
         // If the square up is occupied by an enemy piece, the move is valid
-        if let Some(piece) = board_repr[square] {
-            if piece.color() != board_repr.side_to_move {
+        if let Some(dst_piece) = board_repr[square] {
+            if dst_piece.color() != board_repr.side_to_move {
                 moves.push(Move {
                     from,
                     to: square,
@@ -274,8 +326,10 @@ fn try_add(
                 });
             } else {
                 // If the square up is occupied by a friendly unitary piece,
+                // and the source piece is also unitary,
                 // the move is also valid
-                if piece.is_unitary() {
+                let src_piece = board_repr[from].unwrap();
+                if dst_piece.is_unitary() && src_piece.is_unitary() {
                     moves.push(Move {
                         from,
                         to: square,

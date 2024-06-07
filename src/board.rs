@@ -4,7 +4,8 @@ use yew_hooks::use_size;
 
 use crate::board_bg::BoardBackground;
 use crate::board_repr::BoardRepr;
-use crate::pieces::movement::get_moves_from_square;
+use crate::pieces::movement::{get_moves_from_square, Move};
+use crate::pieces::PieceHalf;
 use crate::square::Square;
 
 #[derive(Properties, PartialEq, Default)]
@@ -17,6 +18,12 @@ pub struct BoardProps {
 
     #[prop_or_default]
     pub board: BoardRepr,
+
+    #[prop_or_default]
+    pub onmove: Callback<Move>,
+
+    #[prop_or_default]
+    pub as_black: bool,
 }
 
 #[function_component]
@@ -25,14 +32,19 @@ pub fn Board(props: &BoardProps) -> Html {
         style,
         class,
         board,
+        onmove,
+        as_black,
     } = props;
 
     let wrap_node = use_node_ref();
     let size = use_size(wrap_node.clone());
 
     let selected_square = use_state(|| None);
+    let combo_selection = use_state(|| None);
 
     let square_to_transform = |s: Square| {
+        // If displaying as black, rotate 180 degrees
+        let s = if *as_black { s.rotate_180() } else { s };
         let (file, rank) = s.coords();
         // squares start at bottom left,
         // but screen coordinates start at top left.
@@ -46,31 +58,121 @@ pub fn Board(props: &BoardProps) -> Html {
 
     let mut pieces = vec![];
     for (square, piece) in board.iter_pieces() {
+        let class = if Some(square) == *selected_square {
+            let selection_phase = match *combo_selection {
+                Some(PieceHalf::Left) => "left",
+                Some(PieceHalf::Right) => "right",
+                None => "full",
+            };
+            format!("{piece} selected {selection_phase}")
+        } else {
+            format!("{piece}")
+        };
         pieces.push(html! {
-            <piece class={format!("{piece}")} style={square_to_transform(square)}></piece>
+            <piece class={class} style={square_to_transform(square)}></piece>
         })
     }
 
     let onclick_square = {
-        shadow_clone!(selected_square);
-        move |square: Square| {
-            log::info!("Clicked square: {square:?}");
-            let old_selection = *selected_square;
-            match old_selection {
-                None => selected_square.set(Some(square)),
-                Some(old) if old == square => selected_square.set(None),
-                _ => selected_square.set(Some(square)),
+        shadow_clone!(selected_square, board, as_black, combo_selection);
+        move |clicked_square: Square| {
+            // rotate 180 degrees if displaying black pieces
+            let clicked_square = if as_black {
+                clicked_square.rotate_180()
+            } else {
+                clicked_square
+            };
+            log::info!("Clicked square: {clicked_square:?}");
+
+            // If we clicked on an empty square, clear the selection
+            if board[clicked_square].is_none() {
+                selected_square.set(None);
+                combo_selection.set(None);
+                return;
             }
+
+            // If nothing was selected, and we clicked on our piece,
+            // select it
+            let old_selection = *selected_square;
+            if old_selection.is_none() {
+                if board[clicked_square].map(|p| p.color()) == Some(board.side_to_move) {
+                    selected_square.set(Some(clicked_square));
+                    combo_selection.set(None);
+                    return;
+                }
+            }
+
+            // If a piece was already selected:
+            if let Some(old_selection) = old_selection {
+                // If we're clicking on the same piece again:
+                if old_selection == clicked_square {
+                    // If the piece is unitary, clear the selection
+                    if let Some(piece) = board[old_selection] {
+                        if let crate::pieces::Piece::Unitary(_) = piece.piece() {
+                            selected_square.set(None);
+                            return;
+                        } else {
+                            // If the piece is a combo, advance the state of combo selection
+                            match *combo_selection {
+                                None => combo_selection.set(Some(PieceHalf::Left)),
+                                Some(PieceHalf::Left) => {
+                                    combo_selection.set(Some(PieceHalf::Right))
+                                }
+                                Some(PieceHalf::Right) => {
+                                    selected_square.set(None);
+                                    combo_selection.set(None);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // If we're clicking on a different place:
+                    // if the other place contains an enemy piece, clear the selection
+                    if let Some(piece) = board[clicked_square] {
+                        if piece.color() != board.side_to_move {
+                            selected_square.set(None);
+                            combo_selection.set(None);
+                            return;
+                        }
+                    }
+                    // Otherwise, select it
+                    selected_square.set(Some(clicked_square));
+                    combo_selection.set(None);
+
+                    return;
+                }
+            }
+
+            // match old_selection {
+            //     None => selected_square.set(Some(clicked_square)),
+            //     Some(old) if old == clicked_square => selected_square.set(None),
+            //     _ => selected_square.set(Some(clicked_square)),
+            // }
         }
     };
 
     // If a square is selected,
     // display the possible moves
     if let Some(square) = *selected_square {
-        let moves = get_moves_from_square(board, square, None);
+        let onmove_wrapper = {
+            shadow_clone!(onmove, selected_square);
+            Callback::from(move |move_: Move| {
+                selected_square.set(None);
+                onmove.emit(move_);
+            })
+        };
+
+        let moves = get_moves_from_square(board, square, *combo_selection);
         for move_ in moves {
+            let onclick = {
+                shadow_clone!(onmove_wrapper);
+                Callback::from(move |ev: MouseEvent| {
+                    ev.prevent_default();
+                    onmove_wrapper.emit(move_)
+                })
+            };
             pieces.push(html! {
-                <square class="move-dest" style={square_to_transform(move_.to)}></square>
+                <square class="move-dest" style={square_to_transform(move_.to)} {onclick}></square>
             })
         }
     }

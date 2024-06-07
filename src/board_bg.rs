@@ -1,5 +1,7 @@
 use crate::square::{File, Rank, Square};
 use shadow_clone::shadow_clone;
+use wasm_bindgen::JsCast;
+use web_sys::{HtmlElement, Node};
 use yew::prelude::*;
 use yew_autoprops::autoprops;
 use yew_hooks::use_size;
@@ -11,8 +13,16 @@ pub fn board_bg(children: &Children, onclick_square: Option<Callback<Square>>) -
     let size = use_size(node.clone());
 
     let onclick = {
-        shadow_clone!(onclick_square, size);
+        shadow_clone!(onclick_square, size, node);
         move |ev: MouseEvent| {
+            // If this event isn't originally targeted at the board background,
+            // don't do anything
+            let target = ev.target().unwrap().dyn_into::<HtmlElement>();
+            if let Ok(target) = target {
+                if !target.is_same_node(node.cast::<Node>().as_ref()) {
+                    return;
+                }
+            }
             if let Some(onclick_square) = onclick_square.clone() {
                 let rel_x = (ev.offset_x() as f32) / size.0 as f32;
                 let rel_y = (ev.offset_y() as f32) / size.0 as f32;

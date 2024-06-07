@@ -20,6 +20,13 @@ impl Piece {
     pub fn is_combination(self) -> bool {
         matches!(self, Piece::Combination(_))
     }
+
+    pub fn contains(self, piece: UnitaryPiece) -> bool {
+        match self {
+            Piece::Unitary(p) => p == piece,
+            Piece::Combination(p) => p.contains(piece),
+        }
+    }
 }
 
 /// A chess piece with a color associated.
@@ -36,11 +43,29 @@ pub enum Color {
     Black,
 }
 
+impl Color {
+    pub fn opposite(self) -> Self {
+        match self {
+            Color::White => Color::Black,
+            Color::Black => Color::White,
+        }
+    }
+}
+
 /// Either the left or the right half of a piece.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum PieceHalf {
     Left,
     Right,
+}
+
+impl PieceHalf {
+    pub fn opposite(self) -> Self {
+        match self {
+            PieceHalf::Left => PieceHalf::Right,
+            PieceHalf::Right => PieceHalf::Left,
+        }
+    }
 }
 
 impl Display for ColorPiece {
@@ -159,6 +184,10 @@ impl Index<PieceHalf> for CombinationPiece {
 }
 
 impl CombinationPiece {
+    pub unsafe fn new_unchecked(first: UnitaryPiece, second: UnitaryPiece) -> Self {
+        Self { first, second }
+    }
+
     pub fn new(first: UnitaryPiece, second: UnitaryPiece) -> Option<Self> {
         // If either of the pieces is the King, the combination is invalid
         if first == UnitaryPiece::King || second == UnitaryPiece::King {
@@ -166,7 +195,7 @@ impl CombinationPiece {
         }
 
         // Swap the two pieces if they're in the wrong order
-        if first > second {
+        if first < second {
             Some(Self { first, second })
         } else {
             Some(Self {
@@ -195,6 +224,10 @@ impl CombinationPiece {
     pub fn white(self) -> ColorPiece {
         ColorPiece::White(self.into())
     }
+
+    pub fn contains(self, piece: UnitaryPiece) -> bool {
+        self.first == piece || self.second == piece
+    }
 }
 
 impl From<CombinationPiece> for Piece {
@@ -205,7 +238,7 @@ impl From<CombinationPiece> for Piece {
 
 impl Display for CombinationPiece {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}_{}", self.first, self.second)
+        write!(f, "{}-{}", self.first, self.second)
     }
 }
 
@@ -229,23 +262,25 @@ mod tests {
         use CombinationPiece as C;
         use UnitaryPiece as U;
 
-        let target = vec![
-            C::new(U::Queen, U::Queen).unwrap(),
-            C::new(U::Queen, U::Bishop).unwrap(),
-            C::new(U::Queen, U::Knight).unwrap(),
-            C::new(U::Queen, U::Rook).unwrap(),
-            C::new(U::Queen, U::Pawn).unwrap(),
-            C::new(U::Bishop, U::Bishop).unwrap(),
-            C::new(U::Bishop, U::Knight).unwrap(),
-            C::new(U::Bishop, U::Rook).unwrap(),
-            C::new(U::Bishop, U::Pawn).unwrap(),
-            C::new(U::Knight, U::Knight).unwrap(),
-            C::new(U::Knight, U::Rook).unwrap(),
-            C::new(U::Knight, U::Pawn).unwrap(),
-            C::new(U::Rook, U::Rook).unwrap(),
-            C::new(U::Rook, U::Pawn).unwrap(),
-            C::new(U::Pawn, U::Pawn).unwrap(),
-        ];
+        let target = unsafe {
+            vec![
+                C::new_unchecked(U::Queen, U::Queen),
+                C::new_unchecked(U::Queen, U::Bishop),
+                C::new_unchecked(U::Queen, U::Knight),
+                C::new_unchecked(U::Queen, U::Rook),
+                C::new_unchecked(U::Queen, U::Pawn),
+                C::new_unchecked(U::Bishop, U::Bishop),
+                C::new_unchecked(U::Bishop, U::Knight),
+                C::new_unchecked(U::Bishop, U::Rook),
+                C::new_unchecked(U::Bishop, U::Pawn),
+                C::new_unchecked(U::Knight, U::Knight),
+                C::new_unchecked(U::Knight, U::Rook),
+                C::new_unchecked(U::Knight, U::Pawn),
+                C::new_unchecked(U::Rook, U::Rook),
+                C::new_unchecked(U::Rook, U::Pawn),
+                C::new_unchecked(U::Pawn, U::Pawn),
+            ]
+        };
 
         let combo_pieces: HashSet<C> = HashSet::from_iter(combo_pieces.into_iter());
         let target = HashSet::from_iter(target.into_iter());

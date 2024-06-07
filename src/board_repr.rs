@@ -1,7 +1,10 @@
 use std::ops::{Index, IndexMut};
 
 use crate::{
-    pieces::{Color, ColorPiece, Piece, UnitaryPiece},
+    pieces::{
+        movement::{get_moves_from_square, Move},
+        Color, ColorPiece, CombinationPiece, Piece, UnitaryPiece,
+    },
     square::{File, Rank, Square},
 };
 
@@ -49,6 +52,176 @@ impl BoardRepr {
             board: self,
             square_idx: 0,
         }
+    }
+
+    pub fn play(&mut self, move_: crate::pieces::movement::Move) -> Result<(), ()> {
+        fn play_inner(this: &mut BoardRepr, move_: Move) -> Result<(), ()> {
+            let Move {
+                from,
+                to,
+                which_half,
+            } = move_;
+            // If the source square is empty, there's nothing to do
+            let src_piece = this[move_.from].ok_or(())?;
+            let dst_piece = this[move_.to];
+
+            // Generate the legal moves from the source square
+            let moves = get_moves_from_square(this, move_.from, move_.which_half);
+
+            // Check if the move is legal
+            if !moves.contains(&move_) {
+                return Err(());
+            }
+
+            let mut did_set_en_passant = false;
+
+            // If the piece that's moving contains a pawn,
+            // if it moved two squares vertically starting at the pawn source rank
+            // then set the en passant square
+            if src_piece.piece().contains(UnitaryPiece::Pawn) {
+                let required_start_rank = match src_piece.color() {
+                    Color::White => Rank::Second,
+                    Color::Black => Rank::Seventh,
+                };
+
+                if from.rank() == required_start_rank
+                    && to.rank().distance(from.rank()) == 2
+                    && to.file() == from.file()
+                {
+                    this.en_passant_square = Some(to);
+                    did_set_en_passant = true;
+                }
+            }
+
+            // If the half to move is unset,
+            // then we're moving the entire piece
+            // The following cases can happen:
+            // - either the destination square is empty
+            // - or the destination square is occupied by an enemy (in which case it is removed)
+            // - or the destination square is occupied by a friendly (in which case both of them must be unitary, and the result is a merge)
+            fn process_unitary_move(
+                this: &mut BoardRepr,
+                from: Square,
+                to: Square,
+                src_piece: ColorPiece,
+                dst_piece: Option<ColorPiece>,
+            ) -> Result<(), ()> {
+                // If the destination square is empty
+                if dst_piece.is_none() {
+                    this[to] = Some(src_piece);
+                    this[from] = None;
+                    return Ok(());
+                }
+
+                if let Some(dst_piece) = dst_piece {
+                    // If the destination square is occupied by an enemy
+                    if dst_piece.color() != src_piece.color() {
+                        this[from] = None;
+                        this[to] = Some(src_piece);
+                        return Ok(());
+                    } else {
+                        // If the destination square is occupied by a friendly unitary piece
+                        if dst_piece.is_unitary() && dst_piece.color() == src_piece.color() {
+                            let (p1, p2) = match (src_piece, dst_piece) {
+                                (
+                                    ColorPiece::White(Piece::Unitary(p1)),
+                                    ColorPiece::White(Piece::Unitary(p2)),
+                                ) => (p1, p2),
+                                (
+                                    ColorPiece::Black(Piece::Unitary(p1)),
+                                    ColorPiece::Black(Piece::Unitary(p2)),
+                                ) => (p1, p2),
+                                _ => {
+                                    log::warn!("Fell through match statement in merging step in process_unitary_move, declaring illegal");
+                                    return Err(());
+                                }
+                            };
+                            // Merge the pieces
+                            let color_constructor = match src_piece.color() {
+                                Color::White => ColorPiece::White,
+                                Color::Black => ColorPiece::Black,
+                            };
+                            let combo = CombinationPiece::new(p1, p2);
+                            if let None = combo {
+                                log::warn!("While merging, a combination was invalid, declaring illegal. Tried merging p1: {p1:?}, p2: {p2:?}");
+                                return Err(());
+                            }
+                            this[from] = None;
+                            this[to] = Some(color_constructor(Piece::Combination(combo.unwrap())));
+                            return Ok(());
+                        }
+                    }
+                }
+
+                // Some unexpected combination of conditions occurred,
+                // the move is probably illegal
+                log::warn!("Fell through conditions in process_unitary_move, declaring illegal");
+                Err(())
+            }
+
+            if let None = which_half {
+                process_unitary_move(this, from, to, src_piece, dst_piece)?;
+            } else {
+                // The half to move is set;
+                // the old square will now contain the remaining half.
+                let src_combo_piece = match src_piece.piece() {
+                    crate::pieces::Piece::Unitary(_) => {
+                        // We already checked for this above,
+                        // so this should never happen
+                        unreachable!()
+                    }
+                    crate::pieces::Piece::Combination(p) => p,
+                };
+                let which_half = which_half.unwrap();
+                let color_constructor = match src_piece.color() {
+                    Color::White => ColorPiece::White,
+                    Color::Black => ColorPiece::Black,
+                };
+
+                let unitary_to_remain = src_combo_piece[which_half.opposite()];
+                this[from] = Some(color_constructor(Piece::Unitary(
+                    src_combo_piece[which_half],
+                )));
+
+                // Now, the source square contains only the half that's moving.
+                // The piece that's staying behind is in temporary memory.
+
+                // Check that the move is legal for this half.
+                let current_move_without_half = Move {
+                    from,
+                    to,
+                    which_half: None,
+                };
+                let moves_for_moving_half = get_moves_from_square(&this, from, None);
+
+                if !moves_for_moving_half.contains(&current_move_without_half) {
+                    return Err(());
+                }
+
+                process_unitary_move(this, from, to, src_piece, dst_piece)?;
+
+                // Finally, the temporary piece is stored back in the source square
+                this[from] = Some(color_constructor(Piece::Unitary(unitary_to_remain)));
+            }
+
+            // If we didn't set en-passant on this move,
+            // then unset it
+            if !did_set_en_passant {
+                this.en_passant_square = None;
+            }
+
+            // Swap the side to move
+            this.side_to_move = this.side_to_move.opposite();
+
+            Ok(())
+        }
+
+        let old_self = self.clone();
+        if let Err(why) = play_inner(self, move_) {
+            *self = old_self;
+            return Err(why);
+        }
+        Ok(())
     }
 }
 

@@ -4,6 +4,7 @@ use yew_hooks::use_size;
 
 use crate::board_bg::BoardBackground;
 use crate::board_repr::BoardRepr;
+use crate::pieces::movement::get_moves_from_square;
 use crate::square::Square;
 
 #[derive(Properties, PartialEq, Default)]
@@ -62,6 +63,17 @@ pub fn Board(props: &BoardProps) -> Html {
             }
         }
     };
+
+    // If a square is selected,
+    // display the possible moves
+    if let Some(square) = *selected_square {
+        let moves = get_moves_from_square(board, square, None);
+        for move_ in moves {
+            pieces.push(html! {
+                <square class="move-dest" style={square_to_transform(move_.to)}></square>
+            })
+        }
+    }
 
     let style = format!("height: {}px !important; {style}", size.0);
     html! {

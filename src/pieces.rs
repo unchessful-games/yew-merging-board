@@ -1,4 +1,9 @@
-use std::fmt::{Debug, Display, Formatter};
+pub mod movement;
+
+use std::{
+    fmt::{Debug, Display, Formatter},
+    ops::Index,
+};
 
 /// A single chess piece, or a combination of two pieces.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -7,11 +12,35 @@ pub enum Piece {
     Combination(CombinationPiece),
 }
 
+impl Piece {
+    pub fn is_unitary(self) -> bool {
+        matches!(self, Piece::Unitary(_))
+    }
+
+    pub fn is_combination(self) -> bool {
+        matches!(self, Piece::Combination(_))
+    }
+}
+
 /// A chess piece with a color associated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ColorPiece {
     White(Piece),
     Black(Piece),
+}
+
+/// A player color.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Color {
+    White,
+    Black,
+}
+
+/// Either the left or the right half of a piece.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PieceHalf {
+    Left,
+    Right,
 }
 
 impl Display for ColorPiece {
@@ -41,10 +70,21 @@ impl ColorPiece {
         matches!(self, ColorPiece::Black(_))
     }
 
+    pub fn color(self) -> Color {
+        match self {
+            ColorPiece::White(_) => Color::White,
+            ColorPiece::Black(_) => Color::Black,
+        }
+    }
+
     pub fn piece(self) -> Piece {
         match self {
             ColorPiece::White(piece) | ColorPiece::Black(piece) => piece,
         }
+    }
+
+    pub fn is_unitary(self) -> bool {
+        self.piece().is_unitary()
     }
 }
 
@@ -58,6 +98,17 @@ pub enum UnitaryPiece {
     Rook,
     Pawn,
     King,
+}
+
+impl UnitaryPiece {
+    pub const ALL: [UnitaryPiece; 6] = [
+        UnitaryPiece::Queen,
+        UnitaryPiece::Bishop,
+        UnitaryPiece::Knight,
+        UnitaryPiece::Rook,
+        UnitaryPiece::Pawn,
+        UnitaryPiece::King,
+    ];
 }
 
 impl Display for UnitaryPiece {
@@ -94,6 +145,17 @@ impl From<UnitaryPiece> for Piece {
 pub struct CombinationPiece {
     first: UnitaryPiece,
     second: UnitaryPiece,
+}
+
+impl Index<PieceHalf> for CombinationPiece {
+    type Output = UnitaryPiece;
+
+    fn index(&self, index: PieceHalf) -> &Self::Output {
+        match index {
+            PieceHalf::Left => &self.first,
+            PieceHalf::Right => &self.second,
+        }
+    }
 }
 
 impl CombinationPiece {
@@ -144,5 +206,50 @@ impl From<CombinationPiece> for Piece {
 impl Display for CombinationPiece {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}_{}", self.first, self.second)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use super::*;
+
+    #[test]
+    fn test_combination_piece_list() {
+        let mut combo_pieces = vec![];
+        for first in UnitaryPiece::ALL {
+            for second in UnitaryPiece::ALL {
+                if let Some(piece) = CombinationPiece::new(first, second) {
+                    combo_pieces.push(piece);
+                }
+            }
+        }
+
+        use CombinationPiece as C;
+        use UnitaryPiece as U;
+
+        let target = vec![
+            C::new(U::Queen, U::Queen).unwrap(),
+            C::new(U::Queen, U::Bishop).unwrap(),
+            C::new(U::Queen, U::Knight).unwrap(),
+            C::new(U::Queen, U::Rook).unwrap(),
+            C::new(U::Queen, U::Pawn).unwrap(),
+            C::new(U::Bishop, U::Bishop).unwrap(),
+            C::new(U::Bishop, U::Knight).unwrap(),
+            C::new(U::Bishop, U::Rook).unwrap(),
+            C::new(U::Bishop, U::Pawn).unwrap(),
+            C::new(U::Knight, U::Knight).unwrap(),
+            C::new(U::Knight, U::Rook).unwrap(),
+            C::new(U::Knight, U::Pawn).unwrap(),
+            C::new(U::Rook, U::Rook).unwrap(),
+            C::new(U::Rook, U::Pawn).unwrap(),
+            C::new(U::Pawn, U::Pawn).unwrap(),
+        ];
+
+        let combo_pieces: HashSet<C> = HashSet::from_iter(combo_pieces.into_iter());
+        let target = HashSet::from_iter(target.into_iter());
+
+        assert_eq!(combo_pieces, target);
     }
 }

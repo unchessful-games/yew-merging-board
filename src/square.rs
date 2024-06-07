@@ -136,6 +136,18 @@ impl File {
         Rank::new(7 - u32::from(self))
     }
 
+    #[inline]
+    #[must_use]
+    pub fn left(self) -> Option<File> {
+        self.offset(-1)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn right(self) -> Option<File> {
+        self.offset(1)
+    }
+
     /// `A`, ..., `H`.
     pub const ALL: [File; 8] = [
         File::A,
@@ -252,6 +264,18 @@ impl Rank {
         File::new(7 - u32::from(self))
     }
 
+    #[inline]
+    #[must_use]
+    pub fn up(self) -> Option<Rank> {
+        self.offset(1)
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn down(self) -> Option<Rank> {
+        self.offset(-1)
+    }
+
     /// `First`, ..., `Eighth`.
     pub const ALL: [Rank; 8] = [
         Rank::First,
@@ -321,7 +345,7 @@ impl Square {
     /// # Examples
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::new(0), Square::A1);
     /// assert_eq!(Square::new(63), Square::H8);
@@ -349,7 +373,7 @@ impl Square {
     /// # Examples
     ///
     /// ```
-    /// use shakmaty::{Square, File, Rank};
+    /// use yew_merging_board::square::{Square, File, Rank};
     ///
     /// assert_eq!(Square::from_coords(File::A, Rank::First), Square::A1);
     /// ```
@@ -370,10 +394,10 @@ impl Square {
     /// # Example
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     /// let sq = Square::from_ascii(b"a5")?;
     /// assert_eq!(sq, Square::A5);
-    /// # Ok::<_, shakmaty::ParseSquareError>(())
+    /// # Ok::<_, yew_merging_board::square::ParseSquareError>(())
     /// ```
     #[inline]
     pub fn from_ascii(s: &[u8]) -> Result<Square, ParseSquareError> {
@@ -395,7 +419,7 @@ impl Square {
     /// # Examples
     ///
     /// ```
-    /// use shakmaty::{Square, File};
+    /// use yew_merging_board::square::{Square, File};
     ///
     /// assert_eq!(Square::A1.file(), File::A);
     /// assert_eq!(Square::B2.file(), File::B);
@@ -410,7 +434,7 @@ impl Square {
     /// # Examples
     ///
     /// ```
-    /// use shakmaty::{Square, Rank};
+    /// use yew_merging_board::square::{Square, Rank};
     ///
     /// assert_eq!(Square::A1.rank(), Rank::First);
     /// assert_eq!(Square::B2.rank(), Rank::Second);
@@ -425,7 +449,7 @@ impl Square {
     /// # Examples
     ///
     /// ```
-    /// use shakmaty::{Square, File, Rank};
+    /// use yew_merging_board::square::{Square, File, Rank};
     ///
     /// assert_eq!(Square::A1.coords(), (File::A, Rank::First));
     /// assert_eq!(Square::H8.coords(), (File::H, Rank::Eighth));
@@ -440,7 +464,7 @@ impl Square {
     /// # Examples
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::F3.offset(8), Some(Square::F4));
     /// assert_eq!(Square::F3.offset(-1), Some(Square::E3));
@@ -481,7 +505,7 @@ impl Square {
     /// Flip the square horizontally.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::H1.flip_horizontal(), Square::A1);
     /// assert_eq!(Square::D3.flip_horizontal(), Square::E3);
@@ -495,7 +519,7 @@ impl Square {
     /// Flip the square vertically.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::A8.flip_vertical(), Square::A1);
     /// assert_eq!(Square::D3.flip_vertical(), Square::D6);
@@ -509,7 +533,7 @@ impl Square {
     /// Flip at the a1-h8 diagonal by swapping file and rank.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::A1.flip_diagonal(), Square::A1);
     /// assert_eq!(Square::A3.flip_diagonal(), Square::C1);
@@ -526,7 +550,7 @@ impl Square {
     /// Flip at the h1-a8 diagonal.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::A1.flip_anti_diagonal(), Square::H8);
     /// assert_eq!(Square::A3.flip_anti_diagonal(), Square::F8);
@@ -540,7 +564,7 @@ impl Square {
     /// Rotate 90 degrees clockwise.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::A1.rotate_90(), Square::A8);
     /// assert_eq!(Square::A3.rotate_90(), Square::C8);
@@ -554,7 +578,7 @@ impl Square {
     /// Rotate 180 degrees.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::A1.rotate_180(), Square::H8);
     /// assert_eq!(Square::A3.rotate_180(), Square::H6);
@@ -568,7 +592,7 @@ impl Square {
     /// Rotate 270 degrees clockwise.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::A1.rotate_270(), Square::H1);
     /// assert_eq!(Square::A3.rotate_270(), Square::F1);
@@ -582,7 +606,7 @@ impl Square {
     /// Tests is the square is a light square.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert!(Square::D1.is_light());
     /// assert!(!Square::D8.is_light());
@@ -595,7 +619,7 @@ impl Square {
     /// Tests is the square is a dark square.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert!(Square::E1.is_dark());
     /// assert!(!Square::E8.is_dark());
@@ -609,7 +633,7 @@ impl Square {
     /// to get from one square to the other.
     ///
     /// ```
-    /// use shakmaty::Square;
+    /// use yew_merging_board::square::Square;
     ///
     /// assert_eq!(Square::A2.distance(Square::B5), 3);
     /// ```
@@ -618,6 +642,62 @@ impl Square {
             self.file().distance(other.file()),
             self.rank().distance(other.rank()),
         )
+    }
+
+    /// The square that's above the given square, from the perspective of the white player.
+    ///
+    /// ```
+    /// use yew_merging_board::square::Square;
+    ///
+    /// assert_eq!(Square::A1.up().unwrap(), Square::A2);
+    /// assert_eq!(Square::H8.up(), None);
+    /// ```
+    pub fn up(self) -> Option<Square> {
+        self.rank()
+            .up()
+            .map(|rank| Square::from_coords(self.file(), rank))
+    }
+
+    /// The square that's below the given square, from the perspective of the white player.
+    ///
+    /// ```
+    /// use yew_merging_board::square::Square;
+    ///
+    /// assert_eq!(Square::A8.down().unwrap(), Square::A7);
+    /// assert_eq!(Square::H1.down(), None);
+    /// ```
+    pub fn down(self) -> Option<Square> {
+        self.rank()
+            .down()
+            .map(|rank| Square::from_coords(self.file(), rank))
+    }
+
+    /// The square that's left of the given square, from the perspective of the white player.
+    ///
+    /// ```
+    /// use yew_merging_board::square::Square;
+    ///
+    /// assert_eq!(Square::B1.left().unwrap(), Square::A1);
+    /// assert_eq!(Square::A8.left(), None);
+    /// ```
+    pub fn left(self) -> Option<Square> {
+        self.file()
+            .left()
+            .map(|file| Square::from_coords(file, self.rank()))
+    }
+
+    /// The square that's right of the given square, from the perspective of the white player.
+    ///
+    /// ```
+    /// use yew_merging_board::square::Square;
+    ///
+    /// assert_eq!(Square::A1.right().unwrap(), Square::B1);
+    /// assert_eq!(Square::H8.right(), None);
+    /// ```
+    pub fn right(self) -> Option<Square> {
+        self.file()
+            .right()
+            .map(|file| Square::from_coords(file, self.rank()))
     }
 }
 

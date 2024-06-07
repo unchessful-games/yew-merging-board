@@ -1,13 +1,23 @@
 use std::ops::{Index, IndexMut};
 
 use crate::{
-    pieces::{ColorPiece, Piece, UnitaryPiece},
+    pieces::{Color, ColorPiece, Piece, UnitaryPiece},
     square::{File, Rank, Square},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct BoardRepr {
     pub pieces: [Option<ColorPiece>; 64],
+    /// If the last move made an en passant capture possible, the square on which the pawn
+    /// to be captured is located is stored here.
+    pub en_passant_square: Option<Square>,
+
+    /// The side to move is stored here
+    pub side_to_move: Color,
+
+    /// The castling rights are stored here
+    /// The order is: white king side, white queen side, black king side, black queen side
+    pub castling_rights: [bool; 4],
 }
 
 impl Index<Square> for BoardRepr {
@@ -26,7 +36,12 @@ impl IndexMut<Square> for BoardRepr {
 
 impl BoardRepr {
     pub const fn empty() -> Self {
-        Self { pieces: [None; 64] }
+        Self {
+            pieces: [None; 64],
+            en_passant_square: None,
+            side_to_move: Color::White,
+            castling_rights: [false; 4],
+        }
     }
 
     pub fn iter_pieces(&self) -> BoardPieceIter {
@@ -58,6 +73,8 @@ impl Default for BoardRepr {
             b[Square::from_coords(File::G, rank)] = Some(color(UnitaryPiece::Knight.into()));
             b[Square::from_coords(File::H, rank)] = Some(color(UnitaryPiece::Rook.into()));
         }
+
+        b.castling_rights = [true; 4];
         b
     }
 }

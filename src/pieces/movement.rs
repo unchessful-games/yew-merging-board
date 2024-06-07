@@ -338,8 +338,12 @@ fn try_add(
                 // If the square up is occupied by a friendly unitary piece,
                 // and the source piece is also unitary,
                 // the move is also valid
+                // (But not if that piece is the king)
                 let src_piece = board_repr[from].unwrap();
                 if dst_piece.is_unitary() && src_piece.is_unitary() {
+                    if let Piece::Unitary(UnitaryPiece::King) = dst_piece.piece() {
+                        return false;
+                    }
                     moves.push(Move {
                         from,
                         to: square,
@@ -467,6 +471,7 @@ pub fn get_king_moves_from_square(
     which_half: Option<PieceHalf>,
     moves: &mut MovesList,
 ) {
+    // The king cannot merge with any other piece
     let squares = [
         from.up().and_then(|x| x.left()),
         from.up(),
@@ -480,7 +485,79 @@ pub fn get_king_moves_from_square(
 
     for square in squares {
         if let Some(square) = square {
-            try_add(board_repr, from, square, which_half, moves);
+            // If the square is occupied, then the move is invalid
+            if board_repr[square].is_some() {
+                continue;
+            }
+            moves.push(Move {
+                from,
+                to: square,
+                which_half,
+            });
+        }
+    }
+
+    // If the king has castling rights, and it is in its starting position,
+    // and the squares between the king and the rook are empty,
+    // then the move is valid
+    // TODO: check that the king doesn't castle through check
+
+    match board_repr.side_to_move {
+        Color::White => {
+            if from == Square::E1 {
+                if board_repr.castling_rights[0] {
+                    // can castle kingside
+                    if board_repr[Square::F1].is_none() && board_repr[Square::G1].is_none() {
+                        moves.push(Move {
+                            from,
+                            to: Square::G1,
+                            which_half,
+                        });
+                    }
+                }
+
+                if board_repr.castling_rights[1] {
+                    // can castle queenside
+                    if board_repr[Square::B1].is_none()
+                        && board_repr[Square::C1].is_none()
+                        && board_repr[Square::D1].is_none()
+                    {
+                        moves.push(Move {
+                            from,
+                            to: Square::C1,
+                            which_half,
+                        });
+                    }
+                }
+            }
+        }
+        Color::Black => {
+            if from == Square::E8 {
+                if board_repr.castling_rights[2] {
+                    // can castle kingside
+                    if board_repr[Square::F8].is_none() && board_repr[Square::G8].is_none() {
+                        moves.push(Move {
+                            from,
+                            to: Square::G8,
+                            which_half,
+                        });
+                    }
+                }
+
+                if board_repr.castling_rights[3] {
+                    // can castle queenside
+                    if board_repr[Square::B8].is_none()
+                        && board_repr[Square::C8].is_none()
+                        && board_repr[Square::D8].is_none()
+                    {
+                        moves.push(Move {
+                            from,
+                            to: Square::C8,
+                            which_half,
+                        });
+                    }
+                }
+            }
         }
     }
 }

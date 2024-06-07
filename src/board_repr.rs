@@ -106,6 +106,109 @@ impl BoardRepr {
                 src_piece: ColorPiece,
                 dst_piece: Option<ColorPiece>,
             ) -> Result<(), ()> {
+                // If the piece that's moving is a king,
+                // then it loses its castling rights
+                // TODO: check that the king doesn't castle through check
+                if src_piece.piece().contains(UnitaryPiece::King) {
+                    match src_piece.color() {
+                        Color::White => {
+                            // If the king has castling rights kingside,
+                            // and is moving from E1 to G1,
+                            // and the rook is on H1,
+                            // then move the king and the rook
+
+                            if this.castling_rights[0]
+                                && from == Square::E1
+                                && to == Square::G1
+                                && this[Square::H1]
+                                    .is_some_and(|v| v.piece().contains(UnitaryPiece::Rook))
+                                && this[Square::F1].is_none()
+                                && this[Square::G1].is_none()
+                            {
+                                this[Square::G1] = this[Square::E1];
+                                this[Square::E1] = None;
+                                this[Square::F1] = this[Square::H1];
+                                this[Square::H1] = None;
+                                this.castling_rights[0] = false;
+                                this.castling_rights[1] = false;
+                                return Ok(());
+                            }
+
+                            // If the king has castling rights queenside,
+                            // and is moving from E1 to C1,
+                            // and the rook is on A1,
+                            // then move the king and the rook
+                            if this.castling_rights[1]
+                                && from == Square::E1
+                                && to == Square::C1
+                                && this[Square::A1]
+                                    .is_some_and(|v| v.piece().contains(UnitaryPiece::Rook))
+                                && this[Square::B1].is_none()
+                                && this[Square::C1].is_none()
+                                && this[Square::D1].is_none()
+                            {
+                                this[Square::C1] = this[Square::E1];
+                                this[Square::E1] = None;
+                                this[Square::D1] = this[Square::A1];
+                                this[Square::A1] = None;
+                                this.castling_rights[0] = false;
+                                this.castling_rights[1] = false;
+                                return Ok(());
+                            }
+
+                            this.castling_rights[0] = false;
+                            this.castling_rights[1] = false;
+                        }
+                        Color::Black => {
+                            // If the king has castling rights kingside,
+                            // and is moving from E8 to G8,
+                            // and the rook is on H8,
+                            // then move the king and the rook
+                            if this.castling_rights[2]
+                                && from == Square::E8
+                                && to == Square::G8
+                                && this[Square::H8]
+                                    .is_some_and(|v| v.piece().contains(UnitaryPiece::Rook))
+                                && this[Square::F8].is_none()
+                                && this[Square::G8].is_none()
+                            {
+                                this[Square::G8] = this[Square::E8];
+                                this[Square::E8] = None;
+                                this[Square::F8] = this[Square::H8];
+                                this[Square::H8] = None;
+                                this.castling_rights[2] = false;
+                                this.castling_rights[3] = false;
+                                return Ok(());
+                            }
+
+                            // If the king has castling rights queenside,
+                            // and is moving from E8 to C8,
+                            // and the rook is on A8,
+                            // then move the king and the rook
+                            if this.castling_rights[3]
+                                && from == Square::E8
+                                && to == Square::C8
+                                && this[Square::A8]
+                                    .is_some_and(|v| v.piece().contains(UnitaryPiece::Rook))
+                                && this[Square::B8].is_none()
+                                && this[Square::C8].is_none()
+                                && this[Square::D8].is_none()
+                            {
+                                this[Square::C8] = this[Square::E8];
+                                this[Square::E8] = None;
+                                this[Square::D8] = this[Square::A8];
+                                this[Square::A8] = None;
+                                this.castling_rights[2] = false;
+                                this.castling_rights[3] = false;
+                                return Ok(());
+                            }
+
+                            this.castling_rights[2] = false;
+                            this.castling_rights[3] = false;
+                        }
+                    }
+                }
+
                 // If the destination square is empty,
                 // and this piece contains a pawn,
                 // and it is to the left or right of the en passant square

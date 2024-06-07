@@ -171,8 +171,13 @@ pub fn Board(props: &BoardProps) -> Html {
                     onmove_wrapper.emit(move_)
                 })
             };
+            let cls = if board[move_.to].is_some() {
+                "move-dest oc"
+            } else {
+                "move-dest"
+            };
             pieces.push(html! {
-                <square class="move-dest" style={square_to_transform(move_.to)} {onclick}></square>
+                <square class={cls} style={square_to_transform(move_.to)} {onclick}></square>
             })
         }
     }

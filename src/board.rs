@@ -4,7 +4,7 @@ use yew_hooks::use_size;
 
 use crate::board_bg::BoardBackground;
 use crate::board_repr::BoardRepr;
-use crate::pieces::movement::{get_moves_from_square, Move};
+use crate::pieces::movement::{get_legal_moves_from_square, get_moves_from_square, Move};
 use crate::pieces::PieceHalf;
 use crate::square::Square;
 
@@ -162,7 +162,7 @@ pub fn Board(props: &BoardProps) -> Html {
             })
         };
 
-        let moves = get_moves_from_square(board, square, *combo_selection);
+        let moves = get_legal_moves_from_square(board, square, *combo_selection);
         for move_ in moves {
             let onclick = {
                 shadow_clone!(onmove_wrapper);

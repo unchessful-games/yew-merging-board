@@ -16,6 +16,20 @@ pub struct Move {
     pub which_half: Option<PieceHalf>,
 }
 
+pub fn get_legal_moves_from_square(
+    board_repr: &BoardRepr,
+    from: Square,
+    which_half: Option<PieceHalf>,
+) -> MovesList {
+    let mut moves = get_moves_from_square(board_repr, from, which_half);
+
+    log::info!("All moves: {moves:?}");
+    moves.retain(|x| board_repr.is_safe_move(*x, board_repr.side_to_move));
+
+    log::info!("Legal moves: {moves:?}");
+    moves
+}
+
 pub fn get_moves_from_square(
     board_repr: &BoardRepr,
     from: Square,

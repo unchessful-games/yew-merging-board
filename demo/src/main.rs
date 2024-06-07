@@ -20,6 +20,8 @@ fn App() -> Html {
     html! {
         <>
             <Board style="max-width: 50%;" class={"container"} {onmove} as_black={true} board={*board_state}/>
+            <p>{"White king in check: "}{board_state.king_in_check(yew_merging_board::pieces::Color::White)}</p>
+            <p>{"Black king in check: "}{board_state.king_in_check(yew_merging_board::pieces::Color::Black)}</p>
             <code><pre>
                 {format!("{:#?}", *board_state)}
             </pre></code>

@@ -54,6 +54,47 @@ impl BoardRepr {
         }
     }
 
+    pub fn is_safe_move(&self, move_: Move, side: Color) -> bool {
+        log::debug!("Testing move: {move_:?}");
+        // Make a temporary copy of the board
+        let mut board = self.clone();
+        if let Err(_) = board.play(move_) {
+            log::debug!("Failed to play {move_:?} on temp board");
+            return false;
+        }
+
+        // Check if the king of the specified side is in check after the move
+        // if not, the move is safe
+        !board.king_in_check(side)
+    }
+
+    pub fn king_square(&self, side: Color) -> Square {
+        for (square, piece) in self.iter_pieces() {
+            if piece.color() == side && piece.piece().contains(UnitaryPiece::King) {
+                return square;
+            }
+        }
+        panic!("There's no king of the side {side:?} on the board");
+    }
+
+    pub fn king_in_check(&self, side: Color) -> bool {
+        // For every enemy piece,
+        // check if it can move to the king's square
+        let king_square = self.king_square(side);
+        for (square, piece) in self.iter_pieces() {
+            if piece.color() != side {
+                let moves = get_moves_from_square(self, square, None);
+                let mut checking_moves = moves.iter().filter(|m| m.to == king_square);
+                let first_checking_move = checking_moves.next();
+                if first_checking_move.is_some() {
+                    log::warn!("Found a checking move: {first_checking_move:?}, therefore {side:?} is in check");
+                    return true;
+                }
+            }
+        }
+        false
+    }
+
     pub fn play(&mut self, move_: crate::pieces::movement::Move) -> Result<(), ()> {
         fn play_inner(this: &mut BoardRepr, move_: Move) -> Result<(), ()> {
             let Move {

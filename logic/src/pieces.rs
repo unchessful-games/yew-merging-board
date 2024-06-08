@@ -27,6 +27,16 @@ impl Piece {
             Piece::Combination(p) => p.contains(piece),
         }
     }
+
+    pub fn for_components(self, mut f: impl FnMut(UnitaryPiece)) {
+        match self {
+            Piece::Unitary(p) => f(p),
+            Piece::Combination(p) => {
+                f(p.first());
+                f(p.second());
+            }
+        }
+    }
 }
 
 /// A chess piece with a color associated.

@@ -60,7 +60,7 @@ impl BoardRepr {
     }
 
     pub fn is_safe_move(&self, move_: Move, side: Color) -> bool {
-        log::debug!("Testing move: {move_:?}");
+        // log::debug!("Testing move: {move_:?}");
         // Make a temporary copy of the board
         let mut board = self.clone();
         if let Err(_) = board.play(move_) {
@@ -420,6 +420,15 @@ impl BoardRepr {
         // so update the previous move
         self.previous_move = Some(move_);
         Ok(())
+    }
+
+    pub fn has_insufficient_material(&self, side: Color) -> bool {
+        // TODO: implement real check for this
+        // right now, only insufficient material is when there is only kings on the board.
+        !self
+            .iter_pieces()
+            .filter(|(_, piece)| piece.color() == side)
+            .any(|(_, piece)| piece.piece() != Piece::Unitary(UnitaryPiece::King))
     }
 }
 

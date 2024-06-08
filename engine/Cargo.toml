@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 merging-board-logic = { path = "../logic" }
+minimax-alpha-beta = { version = "0.2.0", default-features = false }

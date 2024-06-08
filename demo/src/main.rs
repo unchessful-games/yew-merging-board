@@ -2,7 +2,7 @@ use board::Board;
 use merging_board_logic::board_repr::BoardRepr;
 use merging_board_logic::pieces::movement::find_any_legal_move;
 use merging_board_logic::pieces::{movement::Move, Color};
-use merging_engine::{Engine, FirstMove};
+use merging_engine::{AlphaBetaMinimax, Engine, FirstMove};
 use yew::prelude::*;
 use yew_merging_board::*;
 
@@ -47,7 +47,7 @@ fn Home() -> Html {
 #[function_component]
 fn EngineDemo() -> Html {
     let board_state = use_state(|| BoardRepr::default());
-    let engine = use_state(FirstMove::new);
+    let engine = use_state(AlphaBetaMinimax::new);
     let keep_playing = use_state(|| true);
     let onmove = {
         let board_state = board_state.clone();

@@ -4,8 +4,8 @@ use yew_hooks::use_size;
 
 use crate::board_bg::BoardBackground;
 use crate::board_repr::BoardRepr;
-use crate::pieces::movement::{get_legal_moves_from_square, get_moves_from_square, Move};
-use crate::pieces::PieceHalf;
+use crate::pieces::movement::{get_legal_moves_from_square, Move};
+use crate::pieces::{Color, PieceHalf};
 use crate::square::Square;
 
 #[derive(Properties, PartialEq, Default)]
@@ -18,6 +18,9 @@ pub struct BoardProps {
 
     #[prop_or_default]
     pub board: BoardRepr,
+
+    #[prop_or(true)]
+    pub interactable: bool,
 
     #[prop_or_default]
     pub onmove: Callback<Move>,
@@ -34,6 +37,7 @@ pub fn Board(props: &BoardProps) -> Html {
         board,
         onmove,
         as_black,
+        interactable,
     } = props;
 
     let wrap_node = use_node_ref();
@@ -74,8 +78,19 @@ pub fn Board(props: &BoardProps) -> Html {
     }
 
     let onclick_square = {
-        shadow_clone!(selected_square, board, as_black, combo_selection);
+        shadow_clone!(
+            selected_square,
+            board,
+            as_black,
+            combo_selection,
+            interactable
+        );
         move |clicked_square: Square| {
+            // If the board is not interactable, do nothing
+            if !interactable {
+                return;
+            }
+
             // rotate 180 degrees if displaying black pieces
             let clicked_square = if as_black {
                 clicked_square.rotate_180()
@@ -180,6 +195,34 @@ pub fn Board(props: &BoardProps) -> Html {
                 <square class={cls} style={square_to_transform(move_.to)} {onclick}></square>
             })
         }
+    }
+
+    // If either side is in check,
+    // display the check indicator
+    // on the king's square
+    if board.king_in_check(Color::White) {
+        pieces.push(html! {
+            <square class="check" style={square_to_transform(board.king_square(Color::White))}></square>
+        });
+    }
+
+    if board.king_in_check(Color::Black) {
+        pieces.push(html! {
+            <square class="check" style={square_to_transform(board.king_square(Color::Black))}></square>
+        });
+    }
+
+    // If there is a previous move,
+    // display it
+    if let Some(prev_move) = board.previous_move {
+        let src = prev_move.from;
+        let dst = prev_move.to;
+        pieces.push(html! {
+            <>
+                <square class="last-move" style={square_to_transform(src)}></square>
+                <square class="last-move" style={square_to_transform(dst)}></square>
+            </>
+        });
     }
 
     let style = format!("height: {}px !important; {style}", size.0);

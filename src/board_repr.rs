@@ -21,6 +21,10 @@ pub struct BoardRepr {
     /// The castling rights are stored here
     /// The order is: white king side, white queen side, black king side, black queen side
     pub castling_rights: [bool; 4],
+
+    /// The move that was just played by the opposite player.
+    /// None if there is no previous move.
+    pub previous_move: Option<Move>,
 }
 
 impl Index<Square> for BoardRepr {
@@ -44,6 +48,7 @@ impl BoardRepr {
             en_passant_square: None,
             side_to_move: Color::White,
             castling_rights: [false; 4],
+            previous_move: None,
         }
     }
 
@@ -78,12 +83,16 @@ impl BoardRepr {
     }
 
     pub fn king_in_check(&self, side: Color) -> bool {
+        // Make a copy of the board, where the opposite side is to move.
+        let mut board = self.clone();
+        board.side_to_move = side.opposite();
+
         // For every enemy piece,
         // check if it can move to the king's square
         let king_square = self.king_square(side);
         for (square, piece) in self.iter_pieces() {
             if piece.color() != side {
-                let moves = get_moves_from_square(self, square, None);
+                let moves = get_moves_from_square(&board, square, None);
                 let mut checking_moves = moves.iter().filter(|m| m.to == king_square);
                 let first_checking_move = checking_moves.next();
                 if first_checking_move.is_some() {
@@ -382,6 +391,10 @@ impl BoardRepr {
             *self = old_self;
             return Err(why);
         }
+
+        // The move was played successfully,
+        // so update the previous move
+        self.previous_move = Some(move_);
         Ok(())
     }
 }

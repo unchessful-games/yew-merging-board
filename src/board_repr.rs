@@ -259,6 +259,20 @@ impl BoardRepr {
                     }
                 }
 
+                // If this piece contains a pawn,
+                // and it is arriving at the final rank,
+                // then replace the destination square with a queen of the color of the pawn
+                if src_piece.piece().contains(UnitaryPiece::Pawn)
+                    && (to.rank() == Rank::Eighth || to.rank() == Rank::First)
+                {
+                    this[from] = None;
+                    this[to] = Some(match src_piece.color() {
+                        Color::White => UnitaryPiece::Queen.white(),
+                        Color::Black => UnitaryPiece::Queen.black(),
+                    });
+                    return Ok(());
+                }
+
                 // If the destination square is empty,
                 // and this piece contains a pawn,
                 // and it is to the left or right of the en passant square

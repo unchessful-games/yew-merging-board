@@ -499,9 +499,13 @@ pub fn get_king_moves_from_square(
 
     for square in squares {
         if let Some(square) = square {
-            // If the square is occupied, then the move is invalid
-            if board_repr[square].is_some() {
-                continue;
+            // If the square is occupied by a friendly piece, the move is invalid
+            // (king cannot merge)
+            // If it is empty, or it is occupied by an enemy piece, the move is valid
+            if let Some(piece) = board_repr[square] {
+                if piece.color() == board_repr.side_to_move {
+                    continue;
+                }
             }
             moves.push(Move {
                 from,

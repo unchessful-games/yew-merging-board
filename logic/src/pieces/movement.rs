@@ -16,22 +16,53 @@ pub struct Move {
     pub which_half: Option<PieceHalf>,
 }
 
+pub fn find_any_legal_move(board_repr: &BoardRepr, side_to_move: Color) -> Option<Move> {
+    let mut moves = MovesList::new();
+    for (square, piece) in board_repr.iter_pieces() {
+        if piece.color() == side_to_move {
+            moves = get_moves_from_square(moves, board_repr, side_to_move, square, None);
+            moves.retain(|x| board_repr.is_safe_move(*x, side_to_move));
+            if !moves.is_empty() {
+                return Some(moves[0]);
+            }
+        }
+    }
+
+    None
+}
+
+pub fn get_all_legal_moves(board_repr: &BoardRepr, side_to_move: Color) -> MovesList {
+    let mut moves = MovesList::new();
+    for (square, piece) in board_repr.iter_pieces() {
+        if piece.color() == side_to_move {
+            moves = get_moves_from_square(moves, board_repr, side_to_move, square, None);
+        }
+    }
+
+    log::debug!("All semi-legal moves of position: {moves:?}");
+    moves.retain(|x| board_repr.is_safe_move(*x, side_to_move));
+    log::debug!("Only legal moves of position: {moves:?}");
+    moves
+}
+
 pub fn get_legal_moves_from_square(
+    moves: MovesList,
     board_repr: &BoardRepr,
     side_to_move: Color,
     from: Square,
     which_half: Option<PieceHalf>,
 ) -> MovesList {
-    let mut moves = get_moves_from_square(board_repr, side_to_move, from, which_half);
+    let mut moves = get_moves_from_square(moves, board_repr, side_to_move, from, which_half);
 
-    log::info!("All moves: {moves:?}");
+    log::debug!("All moves: {moves:?}");
     moves.retain(|x| board_repr.is_safe_move(*x, side_to_move));
 
-    log::info!("Legal moves: {moves:?}");
+    log::debug!("Legal moves: {moves:?}");
     moves
 }
 
 pub fn get_moves_from_square(
+    mut moves: MovesList,
     board_repr: &BoardRepr,
     side_to_move: Color,
     from: Square,
@@ -42,10 +73,10 @@ pub fn get_moves_from_square(
         if piece.color() == side_to_move {
             piece
         } else {
-            return MovesList::new();
+            return moves;
         }
     } else {
-        return MovesList::new();
+        return moves;
     };
     let color = piece.color();
     let piece = piece.piece();
@@ -63,7 +94,6 @@ pub fn get_moves_from_square(
         }
     }
 
-    let mut moves = MovesList::new();
     let mut add_unitary = |piece: UnitaryPiece| match piece {
         super::UnitaryPiece::Pawn => {
             get_pawn_moves_from_square(board_repr, side_to_move, from, which_half, &mut moves)

@@ -1,4 +1,4 @@
-use crate::square::{File, Rank, Square};
+use merging_board_logic::square::{File, Rank, Square};
 use shadow_clone::shadow_clone;
 use wasm_bindgen::JsCast;
 use web_sys::{HtmlElement, Node};

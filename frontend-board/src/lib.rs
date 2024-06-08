@@ -1,8 +1,5 @@
 pub mod board;
 mod board_bg;
-pub mod board_repr;
-pub mod pieces;
-pub mod square;
 
 use yew::prelude::*;
 

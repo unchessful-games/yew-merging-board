@@ -3,10 +3,10 @@ use yew::prelude::*;
 use yew_hooks::use_size;
 
 use crate::board_bg::BoardBackground;
-use crate::board_repr::BoardRepr;
-use crate::pieces::movement::{get_legal_moves_from_square, Move};
-use crate::pieces::{Color, PieceHalf};
-use crate::square::Square;
+use merging_board_logic::board_repr::BoardRepr;
+use merging_board_logic::pieces::movement::{get_legal_moves_from_square, Move};
+use merging_board_logic::pieces::{Color, Piece, PieceHalf};
+use merging_board_logic::square::Square;
 
 #[derive(Properties, PartialEq, Default)]
 pub struct BoardProps {
@@ -123,7 +123,7 @@ pub fn Board(props: &BoardProps) -> Html {
                 if old_selection == clicked_square {
                     // If the piece is unitary, clear the selection
                     if let Some(piece) = board[old_selection] {
-                        if let crate::pieces::Piece::Unitary(_) = piece.piece() {
+                        if let Piece::Unitary(_) = piece.piece() {
                             selected_square.set(None);
                             return;
                         } else {

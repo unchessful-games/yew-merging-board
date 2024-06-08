@@ -83,16 +83,13 @@ impl BoardRepr {
     }
 
     pub fn king_in_check(&self, side: Color) -> bool {
-        // Make a copy of the board, where the opposite side is to move.
-        let mut board = self.clone();
-        board.side_to_move = side.opposite();
-
+        let side_to_move = side.opposite();
         // For every enemy piece,
         // check if it can move to the king's square
         let king_square = self.king_square(side);
         for (square, piece) in self.iter_pieces() {
             if piece.color() != side {
-                let moves = get_moves_from_square(&board, square, None);
+                let moves = get_moves_from_square(self, side_to_move, square, None);
                 let mut checking_moves = moves.iter().filter(|m| m.to == king_square);
                 let first_checking_move = checking_moves.next();
                 if first_checking_move.is_some() {
@@ -116,7 +113,8 @@ impl BoardRepr {
             let dst_piece = this[move_.to];
 
             // Generate the legal moves from the source square
-            let moves = get_moves_from_square(this, move_.from, move_.which_half);
+            let moves =
+                get_moves_from_square(this, this.side_to_move, move_.from, move_.which_half);
 
             // Check if the move is legal
             if !moves.contains(&move_) {
@@ -376,7 +374,8 @@ impl BoardRepr {
                     to,
                     which_half: None,
                 };
-                let moves_for_moving_half = get_moves_from_square(&this, from, None);
+                let moves_for_moving_half =
+                    get_moves_from_square(&this, this.side_to_move, from, None);
 
                 if !moves_for_moving_half.contains(&current_move_without_half) {
                     return Err(());

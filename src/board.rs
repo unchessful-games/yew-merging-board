@@ -177,7 +177,8 @@ pub fn Board(props: &BoardProps) -> Html {
             })
         };
 
-        let moves = get_legal_moves_from_square(board, square, *combo_selection);
+        let moves =
+            get_legal_moves_from_square(board, board.side_to_move, square, *combo_selection);
         for move_ in moves {
             let onclick = {
                 shadow_clone!(onmove_wrapper);

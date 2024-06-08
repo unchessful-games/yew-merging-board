@@ -18,13 +18,14 @@ pub struct Move {
 
 pub fn get_legal_moves_from_square(
     board_repr: &BoardRepr,
+    side_to_move: Color,
     from: Square,
     which_half: Option<PieceHalf>,
 ) -> MovesList {
-    let mut moves = get_moves_from_square(board_repr, from, which_half);
+    let mut moves = get_moves_from_square(board_repr, side_to_move, from, which_half);
 
     log::info!("All moves: {moves:?}");
-    moves.retain(|x| board_repr.is_safe_move(*x, board_repr.side_to_move));
+    moves.retain(|x| board_repr.is_safe_move(*x, side_to_move));
 
     log::info!("Legal moves: {moves:?}");
     moves
@@ -32,12 +33,13 @@ pub fn get_legal_moves_from_square(
 
 pub fn get_moves_from_square(
     board_repr: &BoardRepr,
+    side_to_move: Color,
     from: Square,
     which_half: Option<PieceHalf>,
 ) -> MovesList {
     // If there is no piece of the current color on the square, there are no moves
     let piece = if let Some(piece) = board_repr[from] {
-        if piece.color() == board_repr.side_to_move {
+        if piece.color() == side_to_move {
             piece
         } else {
             return MovesList::new();
@@ -49,7 +51,7 @@ pub fn get_moves_from_square(
     let piece = piece.piece();
 
     // If the color of the piece is not the same as the side to move, there are no moves
-    if color != board_repr.side_to_move {
+    if color != side_to_move {
         return MovesList::new();
     }
 
@@ -64,23 +66,23 @@ pub fn get_moves_from_square(
     let mut moves = MovesList::new();
     let mut add_unitary = |piece: UnitaryPiece| match piece {
         super::UnitaryPiece::Pawn => {
-            get_pawn_moves_from_square(board_repr, from, which_half, &mut moves)
+            get_pawn_moves_from_square(board_repr, side_to_move, from, which_half, &mut moves)
         }
         super::UnitaryPiece::King => {
-            get_king_moves_from_square(board_repr, from, which_half, &mut moves)
+            get_king_moves_from_square(board_repr, side_to_move, from, which_half, &mut moves)
         }
         super::UnitaryPiece::Queen => {
-            get_rook_moves_from_square(board_repr, from, which_half, &mut moves);
-            get_bishop_moves_from_square(board_repr, from, which_half, &mut moves);
+            get_rook_moves_from_square(board_repr, side_to_move, from, which_half, &mut moves);
+            get_bishop_moves_from_square(board_repr, side_to_move, from, which_half, &mut moves);
         }
         super::UnitaryPiece::Rook => {
-            get_rook_moves_from_square(board_repr, from, which_half, &mut moves)
+            get_rook_moves_from_square(board_repr, side_to_move, from, which_half, &mut moves)
         }
         super::UnitaryPiece::Bishop => {
-            get_bishop_moves_from_square(board_repr, from, which_half, &mut moves)
+            get_bishop_moves_from_square(board_repr, side_to_move, from, which_half, &mut moves)
         }
         super::UnitaryPiece::Knight => {
-            get_knight_moves_from_square(board_repr, from, which_half, &mut moves)
+            get_knight_moves_from_square(board_repr, side_to_move, from, which_half, &mut moves)
         }
     };
 
@@ -106,11 +108,12 @@ pub fn get_moves_from_square(
 
 fn get_pawn_moves_from_square(
     board_repr: &BoardRepr,
+    side_to_move: Color,
     from: Square,
     which_half: Option<PieceHalf>,
     moves: &mut MovesList,
 ) {
-    match board_repr.side_to_move {
+    match side_to_move {
         Color::White => {
             // If the square up is empty, then the move is valid
             if let Some(up) = from.up() {
@@ -137,7 +140,7 @@ fn get_pawn_moves_from_square(
                 // If the square up left is occupied by an enemy piece
                 if let Some(left) = up.left() {
                     if let Some(piece) = board_repr[left] {
-                        if piece.color() != board_repr.side_to_move {
+                        if piece.color() != side_to_move {
                             moves.push(Move {
                                 from,
                                 to: left,
@@ -150,7 +153,7 @@ fn get_pawn_moves_from_square(
                 // If the square up right is occupied by an enemy piece
                 if let Some(right) = up.right() {
                     if let Some(piece) = board_repr[right] {
-                        if piece.color() != board_repr.side_to_move {
+                        if piece.color() != side_to_move {
                             moves.push(Move {
                                 from,
                                 to: right,
@@ -242,7 +245,7 @@ fn get_pawn_moves_from_square(
                 // If the square down left is occupied by a piece (friendly or enemy)
                 if let Some(left) = down.left() {
                     if let Some(piece) = board_repr[left] {
-                        if piece.color() != board_repr.side_to_move {
+                        if piece.color() != side_to_move {
                             moves.push(Move {
                                 from,
                                 to: left,
@@ -255,7 +258,7 @@ fn get_pawn_moves_from_square(
                 // If the square down right is occupied by an enemy piece
                 if let Some(right) = down.right() {
                     if let Some(piece) = board_repr[right] {
-                        if piece.color() != board_repr.side_to_move {
+                        if piece.color() != side_to_move {
                             moves.push(Move {
                                 from,
                                 to: right,
@@ -325,6 +328,7 @@ fn get_pawn_moves_from_square(
 
 fn try_add(
     board_repr: &BoardRepr,
+    side_to_move: Color,
     from: Square,
     square: Square,
     which_half: Option<PieceHalf>,
@@ -342,7 +346,7 @@ fn try_add(
     } else {
         // If the square up is occupied by an enemy piece, the move is valid
         if let Some(dst_piece) = board_repr[square] {
-            if dst_piece.color() != board_repr.side_to_move {
+            if dst_piece.color() != side_to_move {
                 moves.push(Move {
                     from,
                     to: square,
@@ -373,6 +377,7 @@ fn try_add(
 }
 pub fn get_rook_moves_from_square(
     board_repr: &BoardRepr,
+    side_to_move: Color,
     from: Square,
     which_half: Option<PieceHalf>,
     moves: &mut MovesList,
@@ -383,7 +388,15 @@ pub fn get_rook_moves_from_square(
 
     while let Some(left) = current_square.left() {
         current_square = left;
-        if try_add(board_repr, from, current_square, which_half, moves) == false {
+        if try_add(
+            board_repr,
+            side_to_move,
+            from,
+            current_square,
+            which_half,
+            moves,
+        ) == false
+        {
             break;
         }
     }
@@ -392,7 +405,15 @@ pub fn get_rook_moves_from_square(
 
     while let Some(right) = current_square.right() {
         current_square = right;
-        if try_add(board_repr, from, current_square, which_half, moves) == false {
+        if try_add(
+            board_repr,
+            side_to_move,
+            from,
+            current_square,
+            which_half,
+            moves,
+        ) == false
+        {
             break;
         }
     }
@@ -401,7 +422,15 @@ pub fn get_rook_moves_from_square(
 
     while let Some(up) = current_square.up() {
         current_square = up;
-        if try_add(board_repr, from, current_square, which_half, moves) == false {
+        if try_add(
+            board_repr,
+            side_to_move,
+            from,
+            current_square,
+            which_half,
+            moves,
+        ) == false
+        {
             break;
         }
     }
@@ -410,7 +439,15 @@ pub fn get_rook_moves_from_square(
 
     while let Some(down) = current_square.down() {
         current_square = down;
-        if try_add(board_repr, from, current_square, which_half, moves) == false {
+        if try_add(
+            board_repr,
+            side_to_move,
+            from,
+            current_square,
+            which_half,
+            moves,
+        ) == false
+        {
             break;
         }
     }
@@ -418,6 +455,7 @@ pub fn get_rook_moves_from_square(
 
 pub fn get_bishop_moves_from_square(
     board_repr: &BoardRepr,
+    side_to_move: Color,
     from: Square,
     which_half: Option<PieceHalf>,
     moves: &mut MovesList,
@@ -425,7 +463,15 @@ pub fn get_bishop_moves_from_square(
     let mut current_square = from;
     while let Some(upright) = current_square.up().and_then(|x| x.right()) {
         current_square = upright;
-        if try_add(board_repr, from, current_square, which_half, moves) == false {
+        if try_add(
+            board_repr,
+            side_to_move,
+            from,
+            current_square,
+            which_half,
+            moves,
+        ) == false
+        {
             break;
         }
     }
@@ -433,7 +479,15 @@ pub fn get_bishop_moves_from_square(
     let mut current_square = from;
     while let Some(upleft) = current_square.up().and_then(|x| x.left()) {
         current_square = upleft;
-        if try_add(board_repr, from, current_square, which_half, moves) == false {
+        if try_add(
+            board_repr,
+            side_to_move,
+            from,
+            current_square,
+            which_half,
+            moves,
+        ) == false
+        {
             break;
         }
     }
@@ -441,7 +495,15 @@ pub fn get_bishop_moves_from_square(
     let mut current_square = from;
     while let Some(downright) = current_square.down().and_then(|x| x.right()) {
         current_square = downright;
-        if try_add(board_repr, from, current_square, which_half, moves) == false {
+        if try_add(
+            board_repr,
+            side_to_move,
+            from,
+            current_square,
+            which_half,
+            moves,
+        ) == false
+        {
             break;
         }
     }
@@ -449,7 +511,15 @@ pub fn get_bishop_moves_from_square(
     let mut current_square = from;
     while let Some(downleft) = current_square.down().and_then(|x| x.left()) {
         current_square = downleft;
-        if try_add(board_repr, from, current_square, which_half, moves) == false {
+        if try_add(
+            board_repr,
+            side_to_move,
+            from,
+            current_square,
+            which_half,
+            moves,
+        ) == false
+        {
             break;
         }
     }
@@ -457,6 +527,7 @@ pub fn get_bishop_moves_from_square(
 
 pub fn get_knight_moves_from_square(
     board_repr: &BoardRepr,
+    side_to_move: Color,
     from: Square,
     which_half: Option<PieceHalf>,
     moves: &mut MovesList,
@@ -474,13 +545,14 @@ pub fn get_knight_moves_from_square(
 
     for square in squares {
         if let Some(square) = square {
-            try_add(board_repr, from, square, which_half, moves);
+            try_add(board_repr, side_to_move, from, square, which_half, moves);
         }
     }
 }
 
 pub fn get_king_moves_from_square(
     board_repr: &BoardRepr,
+    side_to_move: Color,
     from: Square,
     which_half: Option<PieceHalf>,
     moves: &mut MovesList,
@@ -503,7 +575,7 @@ pub fn get_king_moves_from_square(
             // (king cannot merge)
             // If it is empty, or it is occupied by an enemy piece, the move is valid
             if let Some(piece) = board_repr[square] {
-                if piece.color() == board_repr.side_to_move {
+                if piece.color() == side_to_move {
                     continue;
                 }
             }
@@ -520,7 +592,7 @@ pub fn get_king_moves_from_square(
     // then the move is valid
     // TODO: check that the king doesn't castle through check
 
-    match board_repr.side_to_move {
+    match side_to_move {
         Color::White => {
             if from == Square::E1 {
                 if board_repr.castling_rights[0] {

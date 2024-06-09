@@ -96,7 +96,7 @@ impl GameStrategy for MergingChessStrategy {
     }
 
     fn play(&mut self, mv: &Self::Move, _maximizer: bool) {
-        self.prev_boards.push((self.board.clone(), *mv));
+        self.prev_boards.push((self.board, *mv));
         self.board
             .play(*mv)
             .expect("alpha-beta algorithm produced illegal move");

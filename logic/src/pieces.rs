@@ -292,8 +292,8 @@ mod tests {
             ]
         };
 
-        let combo_pieces: HashSet<C> = HashSet::from_iter(combo_pieces.into_iter());
-        let target = HashSet::from_iter(target.into_iter());
+        let combo_pieces: HashSet<C> = HashSet::from_iter(combo_pieces);
+        let target = HashSet::from_iter(target);
 
         assert_eq!(combo_pieces, target);
     }

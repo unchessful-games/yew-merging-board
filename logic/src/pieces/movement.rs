@@ -88,10 +88,8 @@ pub fn get_moves_from_square(
 
     // If the piece is unitary, then it has no halves
     // If a half is specified in such a case, then there are no moves
-    if which_half.is_some() {
-        if piece.is_unitary() {
-            return MovesList::new();
-        }
+    if which_half.is_some() && piece.is_unitary() {
+        return MovesList::new();
     }
 
     let mut add_unitary = |piece: UnitaryPiece| match piece {
@@ -424,14 +422,14 @@ pub fn get_rook_moves_from_square(
 
     while let Some(left) = current_square.left() {
         current_square = left;
-        if try_add(
+        if !try_add(
             board_repr,
             side_to_move,
             from,
             current_square,
             which_half,
             moves,
-        ) == false
+        )
         {
             break;
         }
@@ -441,14 +439,14 @@ pub fn get_rook_moves_from_square(
 
     while let Some(right) = current_square.right() {
         current_square = right;
-        if try_add(
+        if !try_add(
             board_repr,
             side_to_move,
             from,
             current_square,
             which_half,
             moves,
-        ) == false
+        )
         {
             break;
         }
@@ -458,14 +456,14 @@ pub fn get_rook_moves_from_square(
 
     while let Some(up) = current_square.up() {
         current_square = up;
-        if try_add(
+        if !try_add(
             board_repr,
             side_to_move,
             from,
             current_square,
             which_half,
             moves,
-        ) == false
+        )
         {
             break;
         }
@@ -475,14 +473,14 @@ pub fn get_rook_moves_from_square(
 
     while let Some(down) = current_square.down() {
         current_square = down;
-        if try_add(
+        if !try_add(
             board_repr,
             side_to_move,
             from,
             current_square,
             which_half,
             moves,
-        ) == false
+        )
         {
             break;
         }
@@ -499,14 +497,14 @@ pub fn get_bishop_moves_from_square(
     let mut current_square = from;
     while let Some(upright) = current_square.up().and_then(|x| x.right()) {
         current_square = upright;
-        if try_add(
+        if !try_add(
             board_repr,
             side_to_move,
             from,
             current_square,
             which_half,
             moves,
-        ) == false
+        )
         {
             break;
         }
@@ -515,14 +513,14 @@ pub fn get_bishop_moves_from_square(
     let mut current_square = from;
     while let Some(upleft) = current_square.up().and_then(|x| x.left()) {
         current_square = upleft;
-        if try_add(
+        if !try_add(
             board_repr,
             side_to_move,
             from,
             current_square,
             which_half,
             moves,
-        ) == false
+        )
         {
             break;
         }
@@ -531,14 +529,14 @@ pub fn get_bishop_moves_from_square(
     let mut current_square = from;
     while let Some(downright) = current_square.down().and_then(|x| x.right()) {
         current_square = downright;
-        if try_add(
+        if !try_add(
             board_repr,
             side_to_move,
             from,
             current_square,
             which_half,
             moves,
-        ) == false
+        )
         {
             break;
         }
@@ -547,14 +545,14 @@ pub fn get_bishop_moves_from_square(
     let mut current_square = from;
     while let Some(downleft) = current_square.down().and_then(|x| x.left()) {
         current_square = downleft;
-        if try_add(
+        if !try_add(
             board_repr,
             side_to_move,
             from,
             current_square,
             which_half,
             moves,
-        ) == false
+        )
         {
             break;
         }

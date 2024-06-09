@@ -62,8 +62,8 @@ impl BoardRepr {
     pub fn is_safe_move(&self, move_: Move, side: Color) -> bool {
         // log::debug!("Testing move: {move_:?}");
         // Make a temporary copy of the board
-        let mut board = self.clone();
-        if let Err(_) = board.play(move_) {
+        let mut board = *self;
+        if board.play(move_).is_err() {
             log::debug!("Failed to play {move_:?} on temp board");
             return false;
         }
@@ -355,7 +355,7 @@ impl BoardRepr {
                                 Color::Black => ColorPiece::Black,
                             };
                             let combo = CombinationPiece::new(p1, p2);
-                            if let None = combo {
+                            if combo.is_none() {
                                 log::warn!("While merging, a combination was invalid, declaring illegal. Tried merging p1: {p1:?}, p2: {p2:?}");
                                 return Err(());
                             }
@@ -372,7 +372,7 @@ impl BoardRepr {
                 Err(())
             }
 
-            if let None = which_half {
+            if which_half.is_none() {
                 process_unitary_move(this, from, to, src_piece, dst_piece)?;
             } else {
                 // The half to move is set;
@@ -409,7 +409,7 @@ impl BoardRepr {
                 };
                 let moves_for_moving_half = get_moves_from_square(
                     MovesList::new_const(),
-                    &this,
+                    this,
                     this.side_to_move,
                     from,
                     None,
@@ -437,7 +437,7 @@ impl BoardRepr {
             Ok(())
         }
 
-        let old_self = self.clone();
+        let old_self = *self;
         if let Err(why) = play_inner(self, move_) {
             *self = old_self;
             return Err(why);

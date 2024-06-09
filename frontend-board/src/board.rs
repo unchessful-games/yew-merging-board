@@ -109,12 +109,10 @@ pub fn Board(props: &BoardProps) -> Html {
             // If nothing was selected, and we clicked on our piece,
             // select it
             let old_selection = *selected_square;
-            if old_selection.is_none() {
-                if board[clicked_square].map(|p| p.color()) == Some(board.side_to_move) {
-                    selected_square.set(Some(clicked_square));
-                    combo_selection.set(None);
-                    return;
-                }
+            if old_selection.is_none() && board[clicked_square].map(|p| p.color()) == Some(board.side_to_move) {
+                selected_square.set(Some(clicked_square));
+                combo_selection.set(None);
+                return;
             }
 
             // If a piece was already selected:

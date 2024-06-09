@@ -267,7 +267,8 @@ impl BoardRepr {
                 // and it is arriving at the final rank,
                 // then replace the destination square with a queen of the color of the pawn
                 if src_piece.piece().contains(UnitaryPiece::Pawn)
-                    && (to.rank() == Rank::Eighth || to.rank() == Rank::First)
+                    && (to.rank() == Rank::Eighth && src_piece.color() == Color::White)
+                    || (to.rank() == Rank::First && src_piece.color() == Color::Black)
                 {
                     this[from] = None;
                     this[to] = Some(match src_piece.color() {
@@ -277,12 +278,38 @@ impl BoardRepr {
                     return Ok(());
                 }
 
+                // If the piece that's moving is a rook,
+                // and it's starting from a corner,
+                // then the side that's moving loses its castling rights in that direction
+                if src_piece.piece().contains(UnitaryPiece::Rook) {
+                    match src_piece.color() {
+                        Color::White => {
+                            if from == Square::A1 {
+                                this.castling_rights[1] = false;
+                            }
+                            if from == Square::H1 {
+                                this.castling_rights[0] = false;
+                            }
+                        }
+                        Color::Black => {
+                            if from == Square::A8 {
+                                this.castling_rights[3] = false;
+                            }
+                            if from == Square::H8 {
+                                this.castling_rights[2] = false;
+                            }
+                        }
+                    }
+                }
+
                 // If the destination square is empty,
                 // and this piece contains a pawn,
-                // and it is to the left or right of the en passant square
+                // and it is to the left or right of the en passant square,
+                // and it is moving to the same file as the en passant square
                 if let Some(ep_square) = this.en_passant_square {
                     if from.file().distance(ep_square.file()) == 1
                         && from.rank() == ep_square.rank()
+                        && to.file() == ep_square.file()
                     {
                         this[from] = None;
                         this[ep_square] = None;

@@ -158,7 +158,10 @@ fn get_pawn_moves_from_square(
                 // If the square up up is empty, and it is the second rank,
                 // then the move is valid
                 if let Some(up_up) = up.up() {
-                    if board_repr[up_up].is_none() && from.rank() == Rank::Second {
+                    if board_repr[up].is_none()
+                        && board_repr[up_up].is_none()
+                        && from.rank() == Rank::Second
+                    {
                         moves.push(Move {
                             from,
                             to: up_up,
@@ -263,7 +266,10 @@ fn get_pawn_moves_from_square(
                 // If the square down down is empty, and it is the 7th rank,
                 // then the move is valid
                 if let Some(down_down) = down.down() {
-                    if board_repr[down_down].is_none() && from.rank() == Rank::Seventh {
+                    if board_repr[down].is_none()
+                        && board_repr[down_down].is_none()
+                        && from.rank() == Rank::Seventh
+                    {
                         moves.push(Move {
                             from,
                             to: down_down,

@@ -29,12 +29,10 @@ pub struct AlphaBetaMinimax {
 
 impl Engine for AlphaBetaMinimax {
     fn new() -> Self {
-        Self { depth: 0 }
+        Self { depth: 2 }
     }
     fn think(&mut self, board_repr: &board_repr::BoardRepr) -> pieces::movement::Move {
-        let mut strat = MergingChessStrategy::from(board_repr.clone());
-        let move_ =
-            strat.get_best_move(self.depth, board_repr.side_to_move == pieces::Color::White);
-        move_
+        let mut strat = MergingChessStrategy::from(*board_repr);
+        strat.get_best_move(self.depth, board_repr.side_to_move == pieces::Color::White)
     }
 }

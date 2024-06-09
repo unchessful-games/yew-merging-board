@@ -125,7 +125,6 @@ pub fn Board(props: &BoardProps) -> Html {
                     if let Some(piece) = board[old_selection] {
                         if let Piece::Unitary(_) = piece.piece() {
                             selected_square.set(None);
-                            return;
                         } else {
                             // If the piece is a combo, advance the state of combo selection
                             match *combo_selection {
@@ -153,8 +152,6 @@ pub fn Board(props: &BoardProps) -> Html {
                     // Otherwise, select it
                     selected_square.set(Some(clicked_square));
                     combo_selection.set(None);
-
-                    return;
                 }
             }
 

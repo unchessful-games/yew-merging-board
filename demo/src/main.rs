@@ -2,7 +2,7 @@ use board::Board;
 use merging_board_logic::board_repr::BoardRepr;
 use merging_board_logic::pieces::movement::find_any_legal_move;
 use merging_board_logic::pieces::{movement::Move, Color};
-use merging_engine::{AlphaBetaMinimax, Engine, FirstMove};
+use merging_engine::{AlphaBetaMinimax, Engine};
 use yew::prelude::*;
 use yew_merging_board::*;
 
@@ -18,7 +18,7 @@ enum Route {
 
 #[function_component]
 fn Home() -> Html {
-    let board_state = use_state(|| BoardRepr::default());
+    let board_state = use_state(BoardRepr::default);
     let onmove = {
         let board_state = board_state.clone();
         Callback::from(move |move_: Move| {
@@ -46,7 +46,7 @@ fn Home() -> Html {
 
 #[function_component]
 fn EngineDemo() -> Html {
-    let board_state = use_state(|| BoardRepr::default());
+    let board_state = use_state(BoardRepr::default);
     let engine = use_state(AlphaBetaMinimax::new);
     let keep_playing = use_state(|| true);
     let onmove = {
@@ -79,7 +79,6 @@ fn EngineDemo() -> Html {
             // Check if the player has any legal moves
             if find_any_legal_move(&state, Color::White).is_none() {
                 keep_playing.set(false);
-                return;
             }
         })
     };

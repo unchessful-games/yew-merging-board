@@ -11,7 +11,7 @@ use crate::{
 pub struct MergingChessStrategy {
     board: BoardRepr,
 
-    prev_boards: Vec<BoardRepr>,
+    prev_boards: Vec<(BoardRepr, Move)>,
 }
 
 impl From<BoardRepr> for MergingChessStrategy {
@@ -52,7 +52,8 @@ impl GameStrategy for MergingChessStrategy {
             }
         }
 
-        material
+        log::debug!("Material advantage: {material}");
+        -material
     }
 
     fn get_winner(&self) -> Option<Self::Player> {
@@ -94,15 +95,21 @@ impl GameStrategy for MergingChessStrategy {
         legal_moves.into_iter().collect()
     }
 
-    fn play(&mut self, mv: &Self::Move, maximizer: bool) {
-        self.prev_boards.push(self.board.clone());
+    fn play(&mut self, mv: &Self::Move, _maximizer: bool) {
+        self.prev_boards.push((self.board.clone(), *mv));
         self.board
             .play(*mv)
             .expect("alpha-beta algorithm produced illegal move");
     }
 
     fn clear(&mut self, mv: &Self::Move) {
-        self.board = self.prev_boards.pop().unwrap();
+        let last = self.prev_boards.last().unwrap();
+        if last.1 == *mv {
+            self.board = last.0;
+            self.prev_boards.pop();
+        } else {
+            panic!("Attempted to clear a move that was not played: {mv:?}");
+        }
     }
 
     fn get_board(&self) -> &Self::Board {

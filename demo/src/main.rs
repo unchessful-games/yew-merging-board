@@ -14,6 +14,9 @@ enum Route {
     Home,
     #[at("/engine")]
     Engine,
+
+    #[at("/for-screenshot")]
+    ForScreenshot,
 }
 
 #[function_component]
@@ -97,10 +100,30 @@ fn EngineDemo() -> Html {
     }
 }
 
+#[function_component]
+fn ForScreenshot() -> Html {
+    use merging_board_logic::pieces;
+    use merging_board_logic::square::Square;
+    use pieces::{ColorPiece, CombinationPiece, Piece, UnitaryPiece};
+    use UnitaryPiece::*;
+    let mut board = BoardRepr::empty();
+    board[Square::E4] = Some(ColorPiece::White(Piece::Combination(
+        CombinationPiece::new(Queen, Knight).unwrap(),
+    )));
+    board[Square::A1] = Some(ColorPiece::White(Piece::Unitary(King)));
+    board[Square::H8] = Some(ColorPiece::Black(Piece::Unitary(King)));
+    html! {
+        <>
+            <Board style="width: 50%;" class={"container"} as_black={false} {board} interactable={true}/>
+        </>
+    }
+}
+
 fn switch(route: Route) -> Html {
     match route {
         Route::Home => html! { <Home /> },
         Route::Engine => html! { <EngineDemo /> },
+        Route::ForScreenshot => html! { <ForScreenshot /> },
     }
 }
 

@@ -104,14 +104,45 @@ fn EngineDemo() -> Html {
 fn ForScreenshot() -> Html {
     use merging_board_logic::pieces;
     use merging_board_logic::square::Square;
+    use merging_board_logic::square::Square::*;
+
     use pieces::{ColorPiece, CombinationPiece, Piece, UnitaryPiece};
     use UnitaryPiece::*;
-    let mut board = BoardRepr::empty();
-    board[Square::E4] = Some(ColorPiece::White(Piece::Combination(
+    // let mut board = BoardRepr::empty();
+    // board[Square::E4] = Some(ColorPiece::White(Piece::Combination(
+    //     CombinationPiece::new(Queen, Knight).unwrap(),
+    // )));
+    // board[Square::A1] = Some(ColorPiece::White(Piece::Unitary(King)));
+    // board[Square::H8] = Some(ColorPiece::Black(Piece::Unitary(King)));
+
+    let combinations = [
+        CombinationPiece::new(Queen, Bishop).unwrap(),
         CombinationPiece::new(Queen, Knight).unwrap(),
-    )));
-    board[Square::A1] = Some(ColorPiece::White(Piece::Unitary(King)));
-    board[Square::H8] = Some(ColorPiece::Black(Piece::Unitary(King)));
+        CombinationPiece::new(Queen, Rook).unwrap(),
+        CombinationPiece::new(Queen, Pawn).unwrap(),
+        CombinationPiece::new(Bishop, Knight).unwrap(),
+        CombinationPiece::new(Bishop, Rook).unwrap(),
+        CombinationPiece::new(Bishop, Pawn).unwrap(),
+        CombinationPiece::new(Knight, Rook).unwrap(),
+        CombinationPiece::new(Knight, Pawn).unwrap(),
+        CombinationPiece::new(Rook, Pawn).unwrap(),
+        CombinationPiece::new(Pawn, Pawn).unwrap(),
+        CombinationPiece::new(Rook, Rook).unwrap(),
+        CombinationPiece::new(Knight, Knight).unwrap(),
+        CombinationPiece::new(Bishop, Bishop).unwrap(),
+        CombinationPiece::new(Queen, Queen).unwrap(),
+    ];
+
+    let mut board = BoardRepr::default();
+
+    for (idx, combination) in combinations.iter().enumerate() {
+        board[G4 as usize - idx] = Some(ColorPiece::White(Piece::Combination(combination.clone())));
+        board[B5 as usize + idx] = Some(ColorPiece::Black(Piece::Combination(combination.clone())));
+    }
+
+    board[Square::E1] = Some(ColorPiece::White(Piece::Unitary(King)));
+    board[Square::E8] = Some(ColorPiece::Black(Piece::Unitary(King)));
+
     html! {
         <>
             <Board style="width: 50%;" class={"container"} as_black={false} {board} interactable={true}/>

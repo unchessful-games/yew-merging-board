@@ -41,6 +41,20 @@ impl IndexMut<Square> for BoardRepr {
     }
 }
 
+impl Index<usize> for BoardRepr {
+    type Output = Option<ColorPiece>;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.pieces[index]
+    }
+}
+
+impl IndexMut<usize> for BoardRepr {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.pieces[index]
+    }
+}
+
 impl BoardRepr {
     pub const fn empty() -> Self {
         Self {

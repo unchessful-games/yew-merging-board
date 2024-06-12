@@ -1,3 +1,4 @@
+mod game;
 mod managers;
 mod matchmaking;
 
@@ -45,6 +46,7 @@ async fn main() {
             "/api/matchmaking/ws",
             get(matchmaking::handle_matchmaking_request),
         )
+        .route("/api/game/:game_id/:token", get(game::handle_game_request))
         .fallback_service(get(|req: Request<Body>| async move {
             let res = ServeDir::new(&opt.static_dir).oneshot(req).await.unwrap(); // serve dir is infallible
             let status = res.status();

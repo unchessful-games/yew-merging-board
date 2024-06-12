@@ -1,15 +1,24 @@
-use api::{GameId, MatchmakingCounts, MatchmakingFoundGame};
+use api::{GameId, GameTermination, MatchmakingCounts, MatchmakingFoundGame};
+use merging_board_logic::pieces::Color;
 use tokio::sync::oneshot;
+
+use crate::game::SingleGameHandle;
 
 #[derive(Clone)]
 pub struct AppState {
     pub matchmaker_handle: crate::matchmaking::Handle,
+    pub game_coordinator_handle: crate::game::Handle,
 }
 
 pub fn launch() -> AppState {
     let matchmaker_handle = launch_matchmaking();
 
-    AppState { matchmaker_handle }
+    let game_coordinator_handle = launch_game_coordinator();
+
+    AppState {
+        matchmaker_handle,
+        game_coordinator_handle,
+    }
 }
 
 fn launch_matchmaking() -> crate::matchmaking::Handle {
@@ -100,4 +109,99 @@ fn run_matchmaking(
         })
         .unwrap();
     }
+}
+
+fn launch_game_coordinator() -> crate::game::Handle {
+    let (tx, rx) = tokio::sync::mpsc::channel(100);
+
+    tokio::spawn(game_manager(rx, tx.clone()));
+
+    crate::game::Handle { sender: tx }
+}
+
+async fn game_manager(
+    mut rx: tokio::sync::mpsc::Receiver<crate::game::GameCommand>,
+    tx: tokio::sync::mpsc::Sender<crate::game::GameCommand>,
+) {
+    let mut game_pool = std::collections::HashMap::new();
+
+    struct Game {
+        white_token: String,
+        black_token: String,
+        tx: tokio::sync::mpsc::Sender<crate::game::SingleGameCommand>,
+    }
+
+    loop {
+        let msg = rx.recv().await;
+        let msg = match msg {
+            Some(msg) => msg,
+            None => {
+                continue;
+            }
+        };
+        match msg {
+            crate::game::GameCommand::Create {
+                id,
+                white_token,
+                black_token,
+            } => {
+                let (single_tx, single_rx) = tokio::sync::mpsc::channel(100);
+                tokio::spawn(single_game_manager(single_rx, id.clone(), tx.clone()));
+                game_pool.insert(
+                    id,
+                    Game {
+                        white_token,
+                        black_token,
+                        tx: single_tx.clone(),
+                    },
+                );
+            }
+            crate::game::GameCommand::Connect { id, token, tx } => {
+                // If the game is in the pool,
+                // send the connection to the game.
+                // Otherwise send nothing.
+                let _ = if let Some(game) = game_pool.get(&id) {
+                    let send = if token == game.white_token || token == game.black_token {
+                        Some(SingleGameHandle {
+                            tx: game.tx.clone(),
+                            side: if token == game.white_token {
+                                Color::White
+                            } else {
+                                Color::Black
+                            },
+                        })
+                    } else {
+                        None
+                    };
+                    tx.send(send)
+                } else {
+                    tx.send(None)
+                };
+            }
+            crate::game::GameCommand::Terminate {
+                id,
+                move_history,
+                termination,
+            } => {
+                // TODO: save the game to disk
+                game_pool.remove(&id);
+            }
+        }
+    }
+}
+
+async fn single_game_manager(
+    mut rx: tokio::sync::mpsc::Receiver<crate::game::SingleGameCommand>,
+    id: GameId,
+    tx: tokio::sync::mpsc::Sender<crate::game::GameCommand>,
+) {
+    // Immediately close the game
+
+    tx.send(crate::game::GameCommand::Terminate {
+        id,
+        move_history: vec![],
+        termination: GameTermination::Aborted,
+    })
+    .await
+    .unwrap();
 }

@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 api = { path = "api" }
-axum = { version = "0.7.5", features = ["ws"] }
+axum = { version = "0.7.5", features = ["macros", "ws"] }
 serde_json = "1.0.117"
 tokio = { version = "1.38.0", features = ["full"] }
 merging-board-logic = { path = "../logic", features = ["serde"] }

@@ -8,4 +8,5 @@ members = [
     "logic",
     "multiplayer-server",
     "multiplayer-server/frontend",
+    "multiplayer-server/api",
 ]

@@ -1,3 +1,6 @@
+mod managers;
+mod matchmaking;
+
 use std::{
     net::{IpAddr, SocketAddr},
     path::PathBuf,
@@ -34,7 +37,14 @@ async fn main() {
 
     let opt = Opt::parse();
 
+    let state = managers::launch();
+
     let app = Router::new()
+        .route("/api/matchmaking/counts", get(matchmaking::counts))
+        .route(
+            "/api/matchmaking/ws",
+            get(matchmaking::handle_matchmaking_request),
+        )
         .fallback_service(get(|req: Request<Body>| async move {
             let res = ServeDir::new(&opt.static_dir).oneshot(req).await.unwrap(); // serve dir is infallible
             let status = res.status();
@@ -57,7 +67,8 @@ async fn main() {
                 _ => res.into_response(),
             }
         }))
-        .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
+        .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
+        .with_state(state);
 
     let sock_addr = SocketAddr::from((opt.addr, opt.port));
     let listener = tokio::net::TcpListener::bind(sock_addr).await.unwrap();

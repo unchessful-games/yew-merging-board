@@ -1,3 +1,7 @@
+mod game;
+mod matchmaker;
+
+use api::GameId;
 use board::Board;
 use merging_board_logic::board_repr::BoardRepr;
 use merging_board_logic::pieces::{movement::Move, Color};
@@ -10,6 +14,16 @@ use yew_router::prelude::*;
 enum Route {
     #[at("/")]
     Home,
+
+    #[at("/matchmaking")]
+    Matchmaker,
+
+    #[at("/play/:game_id/:token")]
+    PlayGame { game_id: GameId, token: String },
+
+    #[not_found]
+    #[at("/404")]
+    NotFound,
 }
 
 #[function_component]
@@ -27,6 +41,7 @@ fn Home() -> Html {
 
     html! {
         <>
+            <Link<Route> classes="btn btn-primary" to={Route::Matchmaker}>{"Matchmaker"}</Link<Route>>
             <div class="row">
                 <Board style="max-width: 33%;" class={"container"} onmove={onmove.clone()} as_black={false} board={*board_state} interactable={board_state.side_to_move == Color::White}/>
                 <Board style="max-width: 33%;" class={"container"} onmove={onmove} as_black={true} board={*board_state} interactable={board_state.side_to_move == Color::Black}/>
@@ -43,6 +58,11 @@ fn Home() -> Html {
 fn switch(route: Route) -> Html {
     match route {
         Route::Home => html! { <Home /> },
+        Route::Matchmaker => html! { <matchmaker::Matchmaker /> },
+        Route::NotFound => html! { <div>{"404 Not Found"}</div> },
+        Route::PlayGame { game_id, token } => {
+            html! { <game::PlayGame game_id={game_id} token={token} /> }
+        }
     }
 }
 

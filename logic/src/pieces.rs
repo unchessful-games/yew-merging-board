@@ -1,5 +1,7 @@
 pub mod movement;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Debug, Display, Formatter},
     ops::Index,
@@ -7,6 +9,7 @@ use std::{
 
 /// A single chess piece, or a combination of two pieces.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Piece {
     Unitary(UnitaryPiece),
     Combination(CombinationPiece),
@@ -41,6 +44,7 @@ impl Piece {
 
 /// A chess piece with a color associated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ColorPiece {
     White(Piece),
     Black(Piece),
@@ -48,6 +52,7 @@ pub enum ColorPiece {
 
 /// A player color.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Color {
     White,
     Black,
@@ -64,6 +69,7 @@ impl Color {
 
 /// Either the left or the right half of a piece.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PieceHalf {
     Left,
     Right,
@@ -126,6 +132,7 @@ impl ColorPiece {
 /// A single unitary piece. Combinations are made of two of these,
 /// except for the King.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum UnitaryPiece {
     Queen,
     Bishop,
@@ -177,6 +184,7 @@ impl From<UnitaryPiece> for Piece {
 
 /// A combination of two pieces.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct CombinationPiece {
     first: UnitaryPiece,
     second: UnitaryPiece,

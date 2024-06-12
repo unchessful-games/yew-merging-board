@@ -1,5 +1,7 @@
+#[cfg(feature = "minimax")]
 use minimax_alpha_beta::strategy::game_strategy::GameStrategy;
 
+#[cfg(feature = "minimax")]
 use crate::{
     board_repr::BoardRepr,
     pieces::{
@@ -8,12 +10,14 @@ use crate::{
     },
 };
 
+#[cfg(feature = "minimax")]
 pub struct MergingChessStrategy {
     board: BoardRepr,
 
     prev_boards: Vec<(BoardRepr, Move)>,
 }
 
+#[cfg(feature = "minimax")]
 impl From<BoardRepr> for MergingChessStrategy {
     fn from(board: BoardRepr) -> Self {
         Self {
@@ -23,6 +27,7 @@ impl From<BoardRepr> for MergingChessStrategy {
     }
 }
 
+#[cfg(feature = "minimax")]
 impl GameStrategy for MergingChessStrategy {
     type Player = Color;
 

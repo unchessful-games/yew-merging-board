@@ -6,4 +6,9 @@ edition = "2021"
 [dependencies]
 arrayvec = "0.7.4"
 log = "0.4.21"
-minimax-alpha-beta = { version = "0.2.0", default-features = false }
+minimax-alpha-beta = { version = "0.2.0", default-features = false, optional = true }
+serde = { version = "1.0.203", features = ["derive"], optional = true }
+
+[features]
+minimax = ["dep:minimax-alpha-beta"]
+serde = ["dep:serde"]

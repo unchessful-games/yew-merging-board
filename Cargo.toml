@@ -6,4 +6,6 @@ members = [
     "engine",
     "frontend-board",
     "logic",
+    "multiplayer-server",
+    "multiplayer-server/frontend",
 ]

@@ -10,6 +10,9 @@ use core::{
     str,
 };
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 pub(crate) fn out_of_range_error() -> TryFromIntError {
     // This is a hack to construct TryFromIntError despite its private
     // constructor. The standard library keeps it private intentionally,
@@ -50,6 +53,7 @@ macro_rules! try_from_int_impl {
 #[allow(missing_docs)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(u8)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum File {
     A = 0,
     B,
@@ -183,6 +187,7 @@ try_from_int_impl! { File, 0, 8, u8 i8 u16 i16 u32 i32 u64 i64 u128 i128 usize i
 #[allow(missing_docs)]
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(u8)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Rank {
     First = 0,
     Second,
@@ -324,6 +329,7 @@ impl std::error::Error for ParseSquareError {}
 #[allow(missing_docs)]
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 #[repr(u8)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Square {
     A1 = 0, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,

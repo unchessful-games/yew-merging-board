@@ -8,8 +8,19 @@ use crate::{
     square::{File, Rank, Square},
 };
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct BoardRepr {
+    #[cfg_attr(
+        feature = "serde",
+        serde(
+            serialize_with = "serialize_pieces",
+            deserialize_with = "deserialize_pieces"
+        )
+    )]
     pub pieces: [Option<ColorPiece>; 64],
     /// If the last move made an en passant capture possible, the square on which the pawn
     /// to be captured is located is stored here.
@@ -25,6 +36,40 @@ pub struct BoardRepr {
     /// The move that was just played by the opposite player.
     /// None if there is no previous move.
     pub previous_move: Option<Move>,
+}
+
+#[cfg(feature = "serde")]
+fn serialize_pieces<S>(pieces: &[Option<ColorPiece>; 64], serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    use serde::ser::SerializeSeq as _;
+
+    let mut seq = serializer.serialize_seq(Some(64))?;
+    for piece in pieces {
+        seq.serialize_element(piece)?;
+    }
+    seq.end()
+}
+
+#[cfg(feature = "serde")]
+fn deserialize_pieces<'de, D>(deserializer: D) -> Result<[Option<ColorPiece>; 64], D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let pieces = Vec::<Option<ColorPiece>>::deserialize(deserializer)?;
+    if pieces.len() != 64 {
+        return Err(serde::de::Error::custom(format!(
+            "Expected 64 pieces, got {}",
+            pieces.len()
+        )));
+    }
+
+    let mut pieces_out = [None; 64];
+    for (i, piece) in pieces_out.iter_mut().enumerate() {
+        *piece = pieces[i];
+    }
+    Ok(pieces_out)
 }
 
 impl Index<Square> for BoardRepr {

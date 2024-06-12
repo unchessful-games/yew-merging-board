@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-merging-board-logic = { path = "../logic" }
+merging-board-logic = { path = "../logic", features = ["minimax"] }
 minimax-alpha-beta = { version = "0.2.0", default-features = false }
 log = "0.4.21"

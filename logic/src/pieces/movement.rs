@@ -5,11 +5,15 @@ use crate::{
     square::{Rank, Square},
 };
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use super::{Color, ColorPiece, Piece, PieceHalf, UnitaryPiece};
 
 pub type MovesList = ArrayVec<Move, 1024>;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Move {
     pub from: Square,
     pub to: Square,
@@ -429,8 +433,7 @@ pub fn get_rook_moves_from_square(
             current_square,
             which_half,
             moves,
-        )
-        {
+        ) {
             break;
         }
     }
@@ -446,8 +449,7 @@ pub fn get_rook_moves_from_square(
             current_square,
             which_half,
             moves,
-        )
-        {
+        ) {
             break;
         }
     }
@@ -463,8 +465,7 @@ pub fn get_rook_moves_from_square(
             current_square,
             which_half,
             moves,
-        )
-        {
+        ) {
             break;
         }
     }
@@ -480,8 +481,7 @@ pub fn get_rook_moves_from_square(
             current_square,
             which_half,
             moves,
-        )
-        {
+        ) {
             break;
         }
     }
@@ -504,8 +504,7 @@ pub fn get_bishop_moves_from_square(
             current_square,
             which_half,
             moves,
-        )
-        {
+        ) {
             break;
         }
     }
@@ -520,8 +519,7 @@ pub fn get_bishop_moves_from_square(
             current_square,
             which_half,
             moves,
-        )
-        {
+        ) {
             break;
         }
     }
@@ -536,8 +534,7 @@ pub fn get_bishop_moves_from_square(
             current_square,
             which_half,
             moves,
-        )
-        {
+        ) {
             break;
         }
     }
@@ -552,8 +549,7 @@ pub fn get_bishop_moves_from_square(
             current_square,
             which_half,
             moves,
-        )
-        {
+        ) {
             break;
         }
     }
